@@ -43,7 +43,7 @@ export class OrderService {
      *
      * @see research.md: 30^6 ≈ 729M combinations, <0.007% collision at 10K orders
      */
-    async generateOrderNumber(): Promise<string> {
+    async generateOrderNumber(req?: PayloadRequest): Promise<string> {
         const payload = await getPayloadClient()
 
         for (let attempt = 0; attempt < ORDER_MAX_RETRIES; attempt++) {
@@ -61,6 +61,7 @@ export class OrderService {
                 },
                 limit: 1,
                 overrideAccess: true, // System check
+                ...(req ? { req } : {}),
             })
 
             if (existing.totalDocs === 0) {
@@ -114,16 +115,10 @@ export class OrderService {
     async createOrder(
         input: CreateOrderInput,
         req: PayloadRequest
-    ): Promise<{ orderId: string; orderNumber: string }> {
+    ): Promise<{ orderId: string; orderNumber: string; confirmationToken: string }> {
         const payload = await getPayloadClient()
 
-        const orderNumber = await this.generateOrderNumber()
-
-        // Calculate total amount
-        const totalAmount = input.items.reduce(
-            (sum, item) => sum + item.unitPrice * item.quantity,
-            0
-        )
+        const orderNumber = await this.generateOrderNumber(req)
 
         // Create order within transaction
         const order = await payload.create({
@@ -131,11 +126,11 @@ export class OrderService {
             data: {
                 order_number: orderNumber,
                 session_id: input.sessionId,
-                customer_name: input.customerName,
-                customer_phone: input.customerPhone,
-                notes: input.notes ?? null,
+                cart: input.cartId,
+                idempotency_key: input.idempotencyKey,
+                confirmation_token: input.confirmationToken,
+                confirmation_token_expires_at: input.confirmationTokenExpiresAt,
                 status: ORDER_STATUS.PENDING,
-                total_amount: Math.round(totalAmount * 100) / 100,
             },
             overrideAccess: true, // System creation
             depth: 0, // CRITICAL: Stop read-after-write extra queries
@@ -156,7 +151,6 @@ export class OrderService {
                     variant_name: item.variantName,
                     quantity: item.quantity,
                     unit_price: item.unitPrice,
-                    total_price: Math.round(item.unitPrice * item.quantity * 100) / 100,
                 },
                 overrideAccess: true, // System creation
                 depth: 0,
@@ -165,11 +159,35 @@ export class OrderService {
             })
         }
 
-        logger.info(`Order created: ${orderNumber} (${input.items.length} items, $${totalAmount.toFixed(2)})`)
+        logger.info(`Order created: ${orderNumber} (${input.items.length} items)`)
 
         return {
             orderId: String(order.id),
             orderNumber,
+            confirmationToken: input.confirmationToken,
+        }
+    }
+
+    async findByIdempotencyKey(
+        idempotencyKey: string,
+        req?: PayloadRequest
+    ): Promise<{ orderId: string; orderNumber: string; confirmationToken: string } | null> {
+        const payload = await getPayloadClient()
+        const result = await payload.find({
+            collection: 'orders',
+            where: { idempotency_key: { equals: idempotencyKey } },
+            limit: 1,
+            depth: 0,
+            overrideAccess: true,
+            ...(req ? { req } : {}),
+        })
+        const order = result.docs[0]
+        if (!order || !order.confirmation_token) return null
+
+        return {
+            orderId: String(order.id),
+            orderNumber: order.order_number,
+            confirmationToken: order.confirmation_token,
         }
     }
 

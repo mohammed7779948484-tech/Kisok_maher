@@ -22,7 +22,6 @@ export {
     TRACKING_RATE_LIMIT,
     TRACKING_RATE_INTERVAL,
     ORDER_NUMBER_REGEX,
-    CURRENCY_SYMBOL,
 } from '@/modules/orders/constants'
 
 /** Status display labels */

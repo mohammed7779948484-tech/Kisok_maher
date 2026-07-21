@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
     return {
         title: `${product.name} — Dragon`,
-        description: `${product.brandName ? `${product.brandName} — ` : ''}${product.name}. From $${product.minPrice.toFixed(2)}`,
+        description: `${product.brandName ? `${product.brandName} — ` : ''}${product.name}. View available variants.`,
     }
 }
 

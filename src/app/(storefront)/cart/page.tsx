@@ -14,9 +14,8 @@ import { redirect } from 'next/navigation'
 
 import { verifySession } from '@/core/auth/session'
 import {
-    getCartBySession,
+    getOrCreateCart,
     getCartItems,
-    detectPriceChanges,
     CartPageContent,
 } from '@/features/cart'
 
@@ -33,16 +32,15 @@ export default async function CartPage(): Promise<React.ReactElement> {
     }
 
     // Fetch cart data server-side
-    const cart = await getCartBySession(session.sessionId)
-    const items = cart ? await getCartItems(cart.id) : []
-    const priceChanges = detectPriceChanges(items)
+    const cart = await getOrCreateCart(session.sessionId)
+    const items = await getCartItems(cart.id)
 
     return (
         <div className="mx-auto max-w-3xl px-4 py-8">
             <h1 className="mb-6 text-2xl font-bold text-foreground">
                 Shopping Cart
             </h1>
-            <CartPageContent items={items} priceChanges={priceChanges} />
+            <CartPageContent items={items} />
         </div>
     )
 }

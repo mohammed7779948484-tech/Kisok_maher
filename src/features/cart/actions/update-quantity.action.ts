@@ -21,8 +21,8 @@ import { AppError } from '@/core/errors'
 import { Logger } from '@/core/logger'
 import { updateQuantitySchema } from '@/modules/orders'
 import type { ActionResult, UpdateQuantityInput } from '@/modules/orders'
-import { updateCartItem, extendExpiration } from '@/features/cart/db/mutations'
-import { getCartBySession, getCartItemCount } from '@/features/cart/db/queries'
+import { getOrCreateCart, updateCartItem, extendExpiration } from '@/features/cart/db/mutations'
+import { getCartItemCount } from '@/features/cart/db/queries'
 import { StockService } from '@/modules/orders'
 import { getPayloadClient } from '@/lib/payload'
 import type { UpdateQuantityResult } from '@/features/cart/types'
@@ -64,9 +64,9 @@ export async function updateQuantityAction(
         const { cartItemId, quantity } = parsed.data
 
         // 3. Get cart for session (ownership verification)
-        const cart = await getCartBySession(session.sessionId)
-        if (!cart) {
-            return { success: false, error: 'Cart not found', code: 'NOT_FOUND' }
+        const cart = await getOrCreateCart(session.sessionId)
+        if (cart.processing_key) {
+            return { success: false, error: 'Order is being submitted', code: 'CART_BUSY' }
         }
 
         // 4. Verify strict stock limits (Prevents race conditions and API bypass)
@@ -98,11 +98,9 @@ export async function updateQuantityAction(
         }
 
         // 5. Update cart item quantity
-        const updated = await updateCartItem(cartItemId, quantity)
-        const itemTotal = (updated.quantity as number) * ((updated as Record<string, unknown>).price_at_add as number ?? 0)
+        await updateCartItem(cart.id, cartItemId, quantity)
 
-        // 5. Extend expiration in background (Fire-and-forget) to speed up response
-        Promise.allSettled([extendExpiration(cart.id)])
+        await extendExpiration(cart.id)
 
         const cartItemCount = await getCartItemCount(cart.id)
 
@@ -115,7 +113,6 @@ export async function updateQuantityAction(
             success: true,
             data: {
                 cartItemCount,
-                itemTotal,
             },
         }
     } catch (error) {

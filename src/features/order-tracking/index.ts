@@ -14,7 +14,6 @@ export { TrackOrderForm } from './ui/TrackOrderForm'
 
 // ─── Actions ──────────────────────────────────────────────────
 export { trackOrderAction } from './actions/track-order.action'
-export { lookupOrdersAction } from './actions/lookup-orders.action'
 
 // ─── Constants (UI-specific) ─────────────────────────────────
 export { STATUS_LABELS, STATUS_DESCRIPTIONS } from './constants'
@@ -22,10 +21,7 @@ export { STATUS_LABELS, STATUS_DESCRIPTIONS } from './constants'
 // ─── Types ────────────────────────────────────────────────────
 export type {
     TrackOrderInput,
-    LookupOrdersInput,
     TrackedOrder,
-    OrderListItem,
     TimelineStep,
     TrackOrderResult,
-    LookupOrdersResult,
 } from './types'

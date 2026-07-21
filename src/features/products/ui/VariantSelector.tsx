@@ -13,7 +13,7 @@ import { CloudinaryImage } from '@/shared/ui/CloudinaryImage'
 import { motion, AnimatePresence } from 'framer-motion'
 import { glowHover } from '@/shared/ui/motion/variants'
 
-import { CURRENCY_SYMBOL, PLACEHOLDER_IMAGE } from '../constants'
+import { PLACEHOLDER_IMAGE } from '../constants'
 
 import type { VariantSelectorProps } from '../types'
 
@@ -113,9 +113,6 @@ export function VariantSelector({
                                         {variant.variantName}
                                     </p>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-base font-bold text-foreground">
-                                            {CURRENCY_SYMBOL}{variant.price.toFixed(2)}
-                                        </span>
                                         <span className={`text-xs font-medium ${inStock
                                             ? 'text-primary'
                                             : 'text-destructive'
@@ -195,7 +192,6 @@ export function VariantSelector({
                                             <div className="flex-1">
                                                 <ActionComponent
                                                     variantId={variant.id}
-                                                    price={variant.price}
                                                     stockQuantity={variant.stockQuantity}
                                                     quantity={qty}
                                                 />

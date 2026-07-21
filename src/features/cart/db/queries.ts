@@ -1,143 +1,129 @@
-/**
- * Cart Queries
- *
- * Read operations for cart data. All queries use Payload Local API.
- *
- * @see Constitution Line 257: overrideAccess: false when user context exists
- * @see Constitution Line 1394: Cart queries MUST filter expired carts
- * @see data-model.md: carts and cart_items collections
- */
+/** Server-only cart reads through Payload Local API. */
+
+import type { PayloadRequest } from 'payload'
 
 import { getPayloadClient } from '@/lib/payload'
-import type { CartItemData, PriceChange } from '../types'
+import type { CartItemData, OrderCartItem } from '../types'
 
-/**
- * Get cart by session ID. Filters out expired carts.
- *
- * @param sessionId - Gate session ID
- * @returns Cart document or null if not found or expired
- */
-export async function getCartBySession(sessionId: string) {
+/** Find the reusable cart row for a device session, including an expired row. */
+export async function getCartBySession(sessionId: string, req?: PayloadRequest) {
     if (!sessionId) return null
 
     const payload = await getPayloadClient()
-
     const result = await payload.find({
         collection: 'carts',
-        where: {
-            session_id: { equals: sessionId },
-            expires_at: { greater_than: new Date().toISOString() },
-        },
+        where: { session_id: { equals: sessionId } },
         limit: 1,
         depth: 0,
-        overrideAccess: true, // System-level execution for unauthenticated storefront sessions
+        overrideAccess: true,
+        ...(req ? { req } : {}),
     })
 
     return result.docs[0] ?? null
 }
 
-/**
- * Get cart items with populated variant and product data.
- *
- * Returns CartItemData[] with current prices for live price change detection.
- *
- * @param cartId - Cart UUID
- * @returns Array of cart items with live prices
- */
-export async function getCartItems(cartId: string | number): Promise<CartItemData[]> {
+/** Public cart projection. It must never serialize internal price fields. */
+export async function getCartItems(
+    cartId: string | number,
+    req?: PayloadRequest
+): Promise<CartItemData[]> {
+    return getCartItemProjection(cartId, false, req)
+}
+
+/** Authoritative server-only snapshot for order creation. */
+export async function getCartItemsForOrderCreation(
+    cartId: string | number,
+    req: PayloadRequest
+): Promise<OrderCartItem[]> {
+    return getCartItemProjection(cartId, true, req) as Promise<OrderCartItem[]>
+}
+
+async function getCartItemProjection(
+    cartId: string | number,
+    includeInternalPrice: boolean,
+    req?: PayloadRequest
+): Promise<Array<CartItemData | OrderCartItem>> {
     if (!cartId) return []
 
     const payload = await getPayloadClient()
-
     const result = await payload.find({
         collection: 'cart_items',
-        where: {
-            cart: { equals: cartId },
-        },
-        depth: 2, // Populate variant → product
+        where: { cart: { equals: cartId } },
+        depth: 2,
         limit: 50,
-        overrideAccess: true, // System execution
+        overrideAccess: true,
+        ...(req ? { req } : {}),
     })
 
     return result.docs.map((item) => {
-        const variant = item.variant as Record<string, unknown> | null
-        const product = variant?.product as Record<string, unknown> | null
-        const variantImages = variant?.images as Array<{ image: unknown }> | undefined
-        const variantImage = variantImages?.[0]?.image
+        const variant = asRecord(item.variant)
+        const product = asRecord(variant?.product)
+        const variantImages = Array.isArray(variant?.images)
+            ? variant.images as Array<{ image?: unknown }>
+            : []
+        const variantImage = variantImages[0]?.image
+
+        const publicItem: CartItemData = {
+            id: Number(item.id),
+            variantId: Number(variant?.id ?? 0),
+            productName: typeof product?.name === 'string' ? product.name : 'Unknown Product',
+            variantName: typeof variant?.variant_name === 'string'
+                ? variant.variant_name
+                : 'Unknown Variant',
+            imageUrl: extractImageUrl(variantImage) ?? extractImageUrl(product?.image),
+            cloudinaryPublicId: extractCloudinaryPublicId(variantImage)
+                ?? extractCloudinaryPublicId(product?.image),
+            quantity: typeof item.quantity === 'number' ? item.quantity : 0,
+            isActive: variant?.is_active !== false && product?.is_active !== false,
+            stockQuantity: typeof variant?.stock_quantity === 'number'
+                ? variant.stock_quantity
+                : 0,
+        }
+
+        if (!includeInternalPrice) return publicItem
 
         return {
-            id: item.id as number,
-            variantId: variant?.id as number ?? 0,
-            productName: (product?.name as string) ?? 'Unknown Product',
-            variantName: (variant?.variant_name as string) ?? 'Unknown Variant',
-            imageUrl: extractImageUrl(variantImage) || extractImageUrl(product?.image),
-            cloudinaryPublicId: extractCloudinaryPublicId(variantImage) || extractCloudinaryPublicId(product?.image),
-            quantity: item.quantity as number,
-            priceAtAdd: item.price_at_add as number,
-            currentPrice: (variant?.price as number) ?? 0,
-            isActive: Boolean(variant?.is_active) && Boolean(product?.is_active),
-            stockQuantity: (variant?.stock_quantity as number) ?? 0,
+            ...publicItem,
+            unitPrice: typeof variant?.price === 'number' ? variant.price : null,
         }
     })
 }
 
-/**
- * Get the count of distinct items in a cart.
- *
- * @param cartId - Cart UUID
- * @returns Number of distinct items
- */
-export async function getCartItemCount(cartId: string | number): Promise<number> {
+export async function getCartItemCount(
+    cartId: string | number,
+    req?: PayloadRequest
+): Promise<number> {
     const payload = await getPayloadClient()
-
     const result = await payload.find({
         collection: 'cart_items',
-        where: {
-            cart: { equals: cartId },
-        },
+        where: { cart: { equals: cartId } },
         limit: 1000,
         pagination: false,
         depth: 0,
-        overrideAccess: true, // System execution
+        overrideAccess: true,
+        ...(req ? { req } : {}),
     })
 
-    // Sum the quantity field from all items
-    return result.docs.reduce((total, item) => {
-        return total + (typeof item.quantity === 'number' ? item.quantity : 0)
-    }, 0)
+    return result.docs.reduce(
+        (total, item) => total + (typeof item.quantity === 'number' ? item.quantity : 0),
+        0
+    )
 }
 
-/**
- * Detect price changes between add time and current variant prices.
- *
- * @param items - Cart items with current prices
- * @returns Array of price changes found
- */
-export function detectPriceChanges(items: CartItemData[]): PriceChange[] {
-    return items
-        .filter((item) => item.priceAtAdd !== item.currentPrice && item.isActive)
-        .map((item) => ({
-            variantId: item.variantId,
-            variantName: item.variantName,
-            oldPrice: item.priceAtAdd,
-            newPrice: item.currentPrice,
-        }))
+function asRecord(value: unknown): Record<string, unknown> | null {
+    return typeof value === 'object' && value !== null
+        ? value as Record<string, unknown>
+        : null
 }
 
-/** Extract image URL from Payload upload field */
 function extractImageUrl(image: unknown): string | null {
-    if (!image) return null
-    if (typeof image === 'object' && image !== null && 'url' in image) {
-        return (image as Record<string, unknown>).url as string
-    }
-    return null
+    const value = asRecord(image)
+    return typeof value?.url === 'string' ? value.url : null
 }
 
-/** Extract Cloudinary public_id from Payload upload field */
 function extractCloudinaryPublicId(image: unknown): string | null {
-    if (!image) return null
-    if (typeof image === 'object' && image !== null && 'cloudinary_public_id' in image) {
-        return (image as Record<string, unknown>).cloudinary_public_id as string
-    }
-    return null
+    const value = asRecord(image)
+    return typeof value?.cloudinary_public_id === 'string'
+        ? value.cloudinary_public_id
+        : null
 }

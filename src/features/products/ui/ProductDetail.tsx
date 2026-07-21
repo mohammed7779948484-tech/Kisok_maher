@@ -11,18 +11,16 @@ import { ProductInteractive } from './_components/ProductInteractive'
 import type { ProductDetailProps } from '../types'
 
 export interface ProductDetailWithActionProps extends ProductDetailProps {
-    ActionComponent?: React.ComponentType<{ variantId: number; price: number; stockQuantity: number; quantity: number }>
+    ActionComponent?: React.ComponentType<{ variantId: number; stockQuantity: number; quantity: number }>
 }
 
 export function ProductDetail({ product, ActionComponent }: ProductDetailWithActionProps): React.ReactElement {
-    const { name, imageUrl, brandName, description, unitLabel, variants, minPrice, maxPrice, totalStock, cloudinaryPublicId } = product
+    const { name, imageUrl, brandName, description, unitLabel, variants, totalStock, cloudinaryPublicId } = product
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-8">
             <ProductInteractive
                 variants={variants}
-                minPrice={minPrice}
-                maxPrice={maxPrice}
                 totalStock={totalStock}
                 unitLabel={unitLabel}
                 imageUrl={imageUrl}

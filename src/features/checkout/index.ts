@@ -12,19 +12,17 @@
 export {
     getOrderById,
     getOrderByNumber,
-    getOrdersByPhone,
+    getOrderByConfirmationToken,
 } from './db/queries'
 
 export { createOrder } from './db/mutations'
 
 // ─── Actions ──────────────────────────────────────────────────
 export { processCheckoutAction } from './actions/process-checkout.action'
+export { placeOrderAction } from './actions/place-order.action'
 
 // ─── Types ────────────────────────────────────────────────────
 export type {
-    CheckoutFormInput,
-    CheckoutCartItem,
-    CheckoutResult,
     OrderConfirmationData,
 } from './types'
 

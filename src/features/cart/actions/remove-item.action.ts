@@ -20,8 +20,8 @@ import { AppError } from '@/core/errors'
 import { Logger } from '@/core/logger'
 import { removeItemSchema } from '@/modules/orders'
 import type { ActionResult, RemoveItemInput } from '@/modules/orders'
-import { removeCartItem, extendExpiration } from '@/features/cart/db/mutations'
-import { getCartBySession, getCartItemCount } from '@/features/cart/db/queries'
+import { getOrCreateCart, removeCartItem, extendExpiration } from '@/features/cart/db/mutations'
+import { getCartItemCount } from '@/features/cart/db/queries'
 import type { RemoveItemResult } from '@/features/cart/types'
 
 const logger = new Logger()
@@ -60,16 +60,15 @@ export async function removeItemAction(
         const { cartItemId } = parsed.data
 
         // 3. Get cart for session (ownership verification)
-        const cart = await getCartBySession(session.sessionId)
-        if (!cart) {
-            return { success: false, error: 'Cart not found', code: 'NOT_FOUND' }
+        const cart = await getOrCreateCart(session.sessionId)
+        if (cart.processing_key) {
+            return { success: false, error: 'Order is being submitted', code: 'CART_BUSY' }
         }
 
         // 4. Remove cart item
-        await removeCartItem(cartItemId)
+        await removeCartItem(cart.id, cartItemId)
 
-        // 5. Extend expiration in background
-        Promise.allSettled([extendExpiration(cart.id)])
+        await extendExpiration(cart.id)
 
         const cartItemCount = await getCartItemCount(cart.id)
 

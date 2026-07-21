@@ -28,7 +28,7 @@ export interface VariantSelectorProps {
     variants: import('@/modules/catalog').CatalogVariant[]
     selectedVariantId: number | null
     onSelect: (variantId: number) => void
-    ActionComponent?: React.ComponentType<{ variantId: number; price: number; stockQuantity: number; quantity: number }> | undefined
+    ActionComponent?: React.ComponentType<{ variantId: number; stockQuantity: number; quantity: number }> | undefined
 }
 
 /** Props for BrandCard component */

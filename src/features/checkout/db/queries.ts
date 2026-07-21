@@ -10,10 +10,10 @@
  */
 
 import { OrderQueryService } from '@/modules/orders'
-import type { OrderWithItems, OrderSummary } from '@/modules/orders'
+import type { OrderWithItems } from '@/modules/orders'
 
 /** Re-export types for backward compatibility */
-export type { OrderWithItems, OrderSummary }
+export type { OrderWithItems }
 
 const orderQueryService = new OrderQueryService()
 
@@ -37,12 +37,6 @@ export async function getOrderByNumber(orderNumber: string): Promise<OrderWithIt
     return orderQueryService.getOrderByNumber(orderNumber)
 }
 
-/**
- * Get all orders for a phone number (for phone lookup).
- *
- * @param phone - Customer phone in +1 US format
- * @returns Array of order summaries sorted by date desc
- */
-export async function getOrdersByPhone(phone: string): Promise<OrderSummary[]> {
-    return orderQueryService.getOrdersByPhone(phone)
+export async function getOrderByConfirmationToken(token: string): Promise<OrderWithItems | null> {
+    return orderQueryService.getOrderByConfirmationToken(token)
 }

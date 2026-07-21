@@ -10,7 +10,7 @@ import Link from 'next/link'
 import { CloudinaryImage } from '@/shared/ui/CloudinaryImage'
 import { motion } from 'framer-motion'
 import { glowHover } from '@/shared/ui/motion/variants'
-import { CURRENCY_SYMBOL, PLACEHOLDER_IMAGE } from '../constants'
+import { PLACEHOLDER_IMAGE } from '../constants'
 
 import type { ProductCardProps } from '../types'
 
@@ -18,12 +18,7 @@ import type { ProductCardProps } from '../types'
 const MotionLink = motion.create(Link)
 
 export function ProductCard({ product }: ProductCardProps): React.ReactElement {
-    const { name, slug, imageUrl, brandName, minPrice, maxPrice, variantCount, inStock } = product
-
-    const priceDisplay =
-        minPrice === maxPrice
-            ? `${CURRENCY_SYMBOL}${minPrice.toFixed(2)}`
-            : `${CURRENCY_SYMBOL}${minPrice.toFixed(2)} – ${CURRENCY_SYMBOL}${maxPrice.toFixed(2)}`
+    const { name, slug, imageUrl, brandName, variantCount, inStock } = product
 
     return (
         <MotionLink
@@ -69,9 +64,6 @@ export function ProductCard({ product }: ProductCardProps): React.ReactElement {
                     {name}
                 </h3>
                 <div className="flex items-center justify-between">
-                    <p className="text-base font-bold text-foreground">
-                        {priceDisplay}
-                    </p>
                     {variantCount > 1 && (
                         <span className="text-xs text-muted-foreground animate-pulse">
                             {variantCount} options

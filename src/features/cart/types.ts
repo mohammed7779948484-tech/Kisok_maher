@@ -4,7 +4,7 @@
  * Type definitions for cart UI, actions, and data. Zustand store types live here
  * but cart items are NEVER stored in Zustand (server is source of truth).
  *
- * @see spec.md: FR-011/FR-013 (Zustand UI-only), FR-014 (price change detection)
+ * Public cart types intentionally contain no price fields.
  * @see api-spec.md: AddToCartResult, UpdateQuantityResult, RemoveItemResult
  * @see research.md: Decision #3 (Zustand UI-only store)
  */
@@ -23,18 +23,13 @@ export interface CartItemData {
     imageUrl: string | null
     cloudinaryPublicId: string | null
     quantity: number
-    priceAtAdd: number
-    currentPrice: number
     isActive: boolean
     stockQuantity: number
 }
 
-/** Price change detected between add time and current time */
-export interface PriceChange {
-    variantId: number
-    variantName: string
-    oldPrice: number
-    newPrice: number
+/** Server-only item snapshot used while creating an order. */
+export interface OrderCartItem extends CartItemData {
+    unitPrice: number | null
 }
 
 /** Zustand UI-only store state (NO cart items — server is source of truth) */
@@ -55,7 +50,6 @@ export interface AddToCartResult {
 /** Result from update-quantity server action */
 export interface UpdateQuantityResult {
     cartItemCount: number
-    itemTotal: number
 }
 
 /** Result from remove-item server action */
@@ -71,8 +65,5 @@ export interface ClearCartResult {
 /** Cart summary for display */
 export interface CartSummaryData {
     itemCount: number
-    subtotal: number
     hasInactiveItems: boolean
-    hasPriceChanges: boolean
-    priceChanges: PriceChange[]
 }

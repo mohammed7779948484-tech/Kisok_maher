@@ -14,8 +14,6 @@ export const CATEGORIES_PER_ROW = 3
 /** Max quantity per variant in cart */
 export const MAX_VARIANT_QUANTITY = 10
 
-/** Currency symbol */
-export const CURRENCY_SYMBOL = '$'
 
 /** Default product image placeholder */
 export const PLACEHOLDER_IMAGE = '/media/placeholder.webp'

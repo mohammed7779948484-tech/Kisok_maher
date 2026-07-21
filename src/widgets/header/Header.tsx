@@ -5,7 +5,7 @@
  * Composes features: store name, navigation, CartButton with drawer.
  */
 import { verifySession } from '@/core/auth/session'
-import { getCartBySession, getCartItems, getCartItemCount, detectPriceChanges } from '@/features/cart'
+import { getOrCreateCart, getCartItems, getCartItemCount } from '@/features/cart'
 import { HeaderUI } from './HeaderUI'
 
 /**
@@ -17,23 +17,18 @@ export async function Header(): Promise<React.ReactElement> {
     // Fetch cart data server-side
     let cartItemCount = 0
     let cartItems: Awaited<ReturnType<typeof getCartItems>> = []
-    let priceChanges: ReturnType<typeof detectPriceChanges> = []
 
     const session = await verifySession()
     if (session) {
-        const cart = await getCartBySession(session.sessionId)
-        if (cart) {
-            cartItemCount = await getCartItemCount(cart.id)
-            cartItems = await getCartItems(cart.id)
-            priceChanges = detectPriceChanges(cartItems)
-        }
+        const cart = await getOrCreateCart(session.sessionId)
+        cartItemCount = await getCartItemCount(cart.id)
+        cartItems = await getCartItems(cart.id)
     }
 
     return (
         <HeaderUI
             cartItemCount={cartItemCount}
             cartItems={cartItems}
-            priceChanges={priceChanges}
         />
     )
 }

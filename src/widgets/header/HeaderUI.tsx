@@ -8,15 +8,14 @@ import { staggerContainer, fadeUp } from '@/shared/ui/motion/variants'
 import { CartButton } from '@/features/cart/ui/CartButton'
 import { CartDrawer } from '@/features/cart/ui/CartDrawer'
 import { MobileNav } from './MobileNav'
-import type { CartItemData, PriceChange } from '@/features/cart/types'
+import type { CartItemData } from '@/features/cart/types'
 
 interface HeaderUIProps {
     cartItemCount: number
     cartItems: CartItemData[]
-    priceChanges: PriceChange[]
 }
 
-export function HeaderUI({ cartItemCount, cartItems, priceChanges }: HeaderUIProps) {
+export function HeaderUI({ cartItemCount, cartItems }: HeaderUIProps) {
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -83,7 +82,7 @@ export function HeaderUI({ cartItemCount, cartItems, priceChanges }: HeaderUIPro
             </div>
 
             {/* CartDrawer (renders Portal via Sheet) */}
-            <CartDrawer items={cartItems} priceChanges={priceChanges} />
+            <CartDrawer items={cartItems} />
         </header >
     )
 }

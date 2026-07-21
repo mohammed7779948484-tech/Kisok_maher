@@ -29,7 +29,6 @@ interface StockCheckResult {
 interface VariantInfo {
     productName: string
     variantName: string
-    price: number
     stockQuantity: number
     isActive: boolean
 }
@@ -67,8 +66,7 @@ export class StockService {
 
             return {
                 productName,
-                variantName: (variant.name as string) ?? 'Default',
-                price: (variant.price as number) ?? 0,
+                variantName: variant.variant_name ?? 'Default',
                 stockQuantity: (variant.stock_quantity as number) ?? 0,
                 isActive: isProductActive && isVariantActive,
             }
@@ -110,7 +108,9 @@ export class StockService {
             req,
         })
 
-        const variantsMap = new Map(variantsResult.docs.map((doc: any) => [typeof doc.id === 'string' ? parseInt(doc.id, 10) : doc.id as number, doc as Record<string, unknown>]))
+        const variantsMap = new Map(
+            variantsResult.docs.map((doc) => [Number(doc.id), doc as Record<string, unknown>])
+        )
 
         for (const item of items) {
             const variant = variantsMap.get(item.variantId)
@@ -162,42 +162,36 @@ export class StockService {
 
     /**
      * Return stock for variants (used on order cancellation).
-     * Best-effort — does not throw on failure.
-     *
      * @param items - Array of { variantId, quantity } to return
      */
     async returnStock(
-        items: Array<{ variantId: number; quantity: number }>
+        items: Array<{ variantId: number; quantity: number }>,
+        req?: PayloadRequest
     ): Promise<void> {
         const payload = await getPayloadClient()
 
         for (const item of items) {
-            try {
-                const variant = await payload.findByID({
+            const variant = await payload.findByID({
+                collection: 'product_variants',
+                id: item.variantId,
+                depth: 0,
+                overrideAccess: true,
+                ...(req ? { req } : {}),
+            })
+
+            if (variant) {
+                const currentStock = (variant.stock_quantity as number) ?? 0
+                await payload.update({
                     collection: 'product_variants',
                     id: item.variantId,
+                    data: { stock_quantity: currentStock + item.quantity },
+                    overrideAccess: true,
                     depth: 0,
-                    overrideAccess: true, // System operation
+                    context: { skipRevalidation: true },
+                    ...(req ? { req } : {}),
                 })
 
-                if (variant) {
-                    const currentStock = (variant.stock_quantity as number) ?? 0
-                    await payload.update({
-                        collection: 'product_variants',
-                        id: item.variantId,
-                        data: {
-                            stock_quantity: currentStock + item.quantity,
-                        },
-                        overrideAccess: true, // System operation
-                        depth: 0,
-                        context: { skipRevalidation: true },
-                    })
-
-                    logger.info(`Stock returned: variant ${item.variantId}, ${currentStock} → ${currentStock + item.quantity}`)
-                }
-            } catch (error) {
-                // Log but don't throw — stock return is best-effort
-                logger.error(error as Error, { context: `Failed to return stock for variant ${item.variantId}` })
+                logger.info(`Stock returned: variant ${item.variantId}, ${currentStock} → ${currentStock + item.quantity}`)
             }
         }
     }

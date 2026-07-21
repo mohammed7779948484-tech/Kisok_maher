@@ -23,15 +23,10 @@ export interface OrderRecord {
     id: string
     orderNumber: string
     sessionId: string
-    customerName: string
-    customerPhone: string
-    deliveryAddress: string
-    notes: string | null
     status: OrderStatus
     cancellationReason: string | null
     cancelledBy: CancelledBy | null
     cancelledAt: string | null
-    totalAmount: number
     createdAt: string
     updatedAt: string
 }
@@ -44,23 +39,23 @@ export interface OrderItemRecord {
     productName: string
     variantName: string
     quantity: number
-    unitPrice: number
-    totalPrice: number
+    unitPrice: number | null
     createdAt: string
 }
 
 /** Input for order creation (after Zod validation) */
 export interface CreateOrderInput {
     sessionId: string
-    customerName: string
-    customerPhone: string
-    notes?: string
+    cartId: string | number
+    idempotencyKey: string
+    confirmationToken: string
+    confirmationTokenExpiresAt: string
     items: Array<{
         variantId: number
         productName: string
         variantName: string
         quantity: number
-        unitPrice: number
+        unitPrice: number | null
     }>
 }
 
@@ -76,6 +71,7 @@ export interface StockDecrementResult {
 export interface CheckoutResult {
     orderId: string
     orderNumber: string
+    confirmationToken: string
 }
 
 /** Result from order tracking lookup */
@@ -83,23 +79,11 @@ export interface TrackOrderResult {
     order: {
         orderNumber: string
         status: OrderStatus
-        totalAmount: number
         createdAt: string
         items: Array<{
             productName: string
             variantName: string
             quantity: number
-            unitPrice: number
         }>
     }
-}
-
-/** Result from phone number lookup */
-export interface LookupOrdersResult {
-    orders: Array<{
-        orderNumber: string
-        status: OrderStatus
-        totalAmount: number
-        createdAt: string
-    }>
 }

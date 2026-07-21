@@ -2,7 +2,7 @@
  * Orders & OrderItems Collections
  *
  * Feature-owned collection definitions for the checkout feature.
- * Orders hold customer info and status; OrderItems hold immutable price snapshots.
+ * Orders hold kiosk order state; OrderItems hold immutable product snapshots.
  *
  * @see data-model.md: orders and order_items collection schemas
  * @see spec.md: FR-017/FR-018/FR-019/FR-020 (collection constraints)
@@ -20,7 +20,7 @@ export const Orders: CollectionConfig = {
     slug: 'orders',
     admin: {
         useAsTitle: 'order_number',
-        defaultColumns: ['order_number', 'customer_name', 'status', 'total_amount', 'createdAt'],
+        defaultColumns: ['order_number', 'status', 'createdAt'],
         group: 'Commerce',
         description: 'Customer orders with COD payment',
     },
@@ -52,27 +52,64 @@ export const Orders: CollectionConfig = {
             },
         },
         {
+            name: 'cart',
+            type: 'relationship',
+            relationTo: 'carts',
+            index: true,
+            admin: {
+                readOnly: true,
+                description: 'Reusable tablet-session cart used for this order',
+            },
+        },
+        {
+            name: 'idempotency_key',
+            type: 'text',
+            unique: true,
+            index: true,
+            admin: {
+                hidden: true,
+            },
+        },
+        {
+            name: 'confirmation_token',
+            type: 'text',
+            unique: true,
+            index: true,
+            admin: {
+                hidden: true,
+            },
+        },
+        {
+            name: 'confirmation_token_expires_at',
+            type: 'date',
+            index: true,
+            admin: {
+                hidden: true,
+            },
+        },
+        {
             name: 'customer_name',
             type: 'text',
-            required: true,
             admin: {
-                description: 'Customer name (2-255 chars)',
+                hidden: true,
+                description: 'Legacy compatibility field',
             },
         },
         {
             name: 'customer_phone',
             type: 'text',
-            required: true,
             index: true,
             admin: {
-                description: 'Customer phone (+1 US format)',
+                hidden: true,
+                description: 'Legacy compatibility field',
             },
         },
         {
             name: 'notes',
             type: 'textarea',
             admin: {
-                description: 'Optional order notes (max 1000 chars)',
+                hidden: true,
+                description: 'Legacy compatibility field',
             },
         },
         {
@@ -132,10 +169,10 @@ export const Orders: CollectionConfig = {
         {
             name: 'total_amount',
             type: 'number',
-            required: true,
             min: 0,
             admin: {
-                description: 'Order total in USD',
+                hidden: true,
+                description: 'Legacy aggregate; new kiosk orders do not write it',
             },
         },
     ],
@@ -151,7 +188,7 @@ export const Orders: CollectionConfig = {
 export const OrderItems: CollectionConfig = {
     slug: 'order_items',
     admin: {
-        defaultColumns: ['order', 'product_name', 'variant_name', 'quantity', 'total_price'],
+        defaultColumns: ['order', 'product_name', 'variant_name', 'quantity'],
         group: 'Commerce',
         description: 'Line items in orders (immutable snapshots)',
     },
@@ -203,24 +240,31 @@ export const OrderItems: CollectionConfig = {
             },
         },
         {
-            name: 'unit_price',
-            type: 'number',
-            required: true,
-            min: 0,
+            type: 'collapsible',
+            label: 'Internal Pricing',
             admin: {
-                description: 'Price per unit at order time',
-                readOnly: true,
+                initCollapsed: true,
             },
-        },
-        {
-            name: 'total_price',
-            type: 'number',
-            required: true,
-            min: 0,
-            admin: {
-                description: 'unit_price × quantity',
-                readOnly: true,
-            },
+            fields: [
+                {
+                    name: 'unit_price',
+                    type: 'number',
+                    min: 0,
+                    admin: {
+                        description: 'Optional internal price snapshot',
+                        readOnly: true,
+                    },
+                },
+                {
+                    name: 'total_price',
+                    type: 'number',
+                    min: 0,
+                    admin: {
+                        hidden: true,
+                        description: 'Legacy aggregate; new kiosk orders do not write it',
+                    },
+                },
+            ],
         },
     ],
     timestamps: false,

@@ -28,8 +28,8 @@ export { clearCartAction } from './actions/clear-cart.action'
 export {
     getCartBySession,
     getCartItems,
+    getCartItemsForOrderCreation,
     getCartItemCount,
-    detectPriceChanges,
 } from './db/queries'
 
 export {
@@ -39,11 +39,14 @@ export {
     removeCartItem,
     clearCart,
     extendExpiration,
-    deleteCart,
+    claimCart,
+    recoverStaleCartClaim,
+    releaseCartClaim,
+    resetCartAfterOrder,
 } from './db/mutations'
 
 // ─── Types ────────────────────────────────────────────────────
-export type { CartItemData, PriceChange, CartUIState } from './types'
+export type { CartItemData, OrderCartItem, CartUIState } from './types'
 
 // ─── Collections (for payload.config.ts) ──────────────────────
 export { Carts, CartItems } from './db/schema'

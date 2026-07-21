@@ -105,11 +105,14 @@ export const MAX_QUANTITY = 10
 /** Maximum number of distinct items (variants) per cart */
 export const MAX_CART_ITEMS = 50
 
-/** Cart expiration time in hours from last activity */
-export const CART_EXPIRY_HOURS = 24
+/** Cart-content expiration time in minutes from last tablet activity */
+export const CART_EXPIRY_MINUTES = 20
 
-/** Cart expiration time in milliseconds */
-export const CART_EXPIRY_MS = CART_EXPIRY_HOURS * 60 * 60 * 1000
+/** Cart-content expiration time in milliseconds */
+export const CART_EXPIRY_MS = CART_EXPIRY_MINUTES * 60 * 1000
+
+/** An unfinished order claim can be recovered after this interval */
+export const CART_PROCESSING_TIMEOUT_MS = 2 * 60 * 1000
 
 /** Minimum quantity for a cart item */
 export const MIN_QUANTITY = 1

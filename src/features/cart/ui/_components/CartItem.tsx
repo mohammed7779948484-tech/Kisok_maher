@@ -1,7 +1,7 @@
 /**
  * CartItem Component
  *
- * Displays a single cart item with product info, quantity, and price.
+ * Displays a single cart item with product info and quantity.
  * Server-fetched data passed as props (NOT from Zustand).
  *
  * @see Constitution Lines 1163-1187: Cart data from server, not Zustand
@@ -29,14 +29,12 @@ interface CartItemProps {
 /**
  * Individual cart item row.
  *
- * Shows product image, name, variant, quantity, and price.
+ * Shows product image, name, variant, and quantity.
  * Greyed out when item is inactive (FR-015).
  * Loading overlay when server operation is in progress (FR-016).
  */
 export function CartItem({ item, isLoading = false }: CartItemProps): React.ReactElement {
-    const hasChanged = item.priceAtAdd !== item.currentPrice && item.isActive
-
-    // Server-driven state: no optimistic UI hacks to ensure subtotal remains perfectly in sync
+    // Server-driven state keeps stock and quantity in sync across customer handoffs.
     const [isPending, startTransition] = useTransition()
     const { setLoading } = useCart()
 
@@ -139,21 +137,8 @@ export function CartItem({ item, isLoading = false }: CartItemProps): React.Reac
                     </div>
 
                     <div className="flex items-center gap-3 text-right">
-                        {!item.isActive ? (
+                        {!item.isActive && (
                             <span className="text-xs font-medium text-destructive">Unavailable</span>
-                        ) : hasChanged ? (
-                            <div className="flex flex-col items-end">
-                                <span className="text-xs text-muted-foreground line-through">
-                                    ${item.priceAtAdd.toFixed(2)}
-                                </span>
-                                <span className="text-sm font-semibold text-primary">
-                                    ${item.currentPrice.toFixed(2)}
-                                </span>
-                            </div>
-                        ) : (
-                            <span className="text-sm font-semibold text-foreground">
-                                ${(item.currentPrice * item.quantity).toFixed(2)}
-                            </span>
                         )}
 
                         <button

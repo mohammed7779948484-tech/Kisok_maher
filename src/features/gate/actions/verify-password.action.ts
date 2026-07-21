@@ -23,6 +23,7 @@ import { gateRateLimiter } from '@/core/rate-limit'
 import { createSession } from '@/core/auth/session'
 import { logger } from '@/core/logger'
 import { getPayloadClient } from '@/lib/payload'
+import { CART_EXPIRY_MS } from '@/modules/orders'
 
 import type { GateActionResult } from '../types'
 
@@ -94,7 +95,7 @@ export async function verifyPassword(input: unknown): Promise<GateActionResult> 
         await createSession(sessionId, rememberMe)
 
         // 6. Create cart for this session
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        const expiresAt = new Date(Date.now() + CART_EXPIRY_MS)
 
         await payload.create({
             collection: 'carts',
@@ -102,6 +103,7 @@ export async function verifyPassword(input: unknown): Promise<GateActionResult> 
                 session_id: sessionId,
                 expires_at: expiresAt.toISOString(),
             },
+            overrideAccess: true,
         })
 
         logger.info('Gate access granted — session and cart created', {

@@ -4,7 +4,7 @@ import { TrackOrderForm } from '@/features/order-tracking'
 
 export const metadata: Metadata = {
     title: 'Track Order — Dragon',
-    description: 'Track your order status by order number or phone number',
+    description: 'Track your order status by order number',
 }
 
 /**
@@ -21,7 +21,7 @@ export default function TrackOrderPage(): React.ReactElement {
         <div className="mx-auto max-w-2xl px-4 py-8">
             <h1 className="mb-2 text-3xl font-bold tracking-tight">Track Your Order</h1>
             <p className="mb-8 text-muted-foreground">
-                Search by order number or phone number to check your order status.
+                Enter the order number shown after confirmation.
             </p>
 
             <div className="rounded-xl border border-border/50 bg-card p-6 shadow-sm">

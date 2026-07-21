@@ -1,85 +1,89 @@
-/**
- * Cart Mutations
- *
- * Write operations for cart data. All mutations use Payload Local API.
- *
- * @see Constitution Line 257: overrideAccess: false when user context exists
- * @see data-model.md: carts and cart_items collections
- * @see spec.md: FR-005 through FR-009
- */
+/** Cart writes through Payload Local API. */
 
-import { getPayloadClient } from '@/lib/payload'
+import type { PayloadRequest } from 'payload'
+
 import { AppError } from '@/core/errors'
+import { getPayloadClient } from '@/lib/payload'
 import {
     CART_EXPIRY_MS,
+    CART_FULL_MESSAGE,
+    CART_PROCESSING_TIMEOUT_MS,
     MAX_CART_ITEMS,
     MAX_QUANTITY,
-    CART_FULL_MESSAGE,
 } from '@/modules/orders'
-import { getCartItemCount } from './queries'
+import { getCartBySession, getCartItemCount } from './queries'
 
-/**
- * Get or create a cart for the given session.
- *
- * @param sessionId - Gate session ID
- * @returns Cart document (existing or newly created)
- */
-export async function getOrCreateCart(sessionId: string) {
-    const payload = await getPayloadClient()
-
-    // Try to find existing non-expired cart
-    const existing = await payload.find({
-        collection: 'carts',
-        where: {
-            session_id: { equals: sessionId },
-            expires_at: { greater_than: new Date().toISOString() },
-        },
-        limit: 1,
-        depth: 0,
-        overrideAccess: true,
-    })
-
-    if (existing.docs[0]) {
-        return existing.docs[0]
-    }
-
-    // Create new cart with 24h expiry
-    const expiresAt = new Date(Date.now() + CART_EXPIRY_MS)
-
-    const cart = await payload.create({
-        collection: 'carts',
-        data: {
-            session_id: sessionId,
-            expires_at: expiresAt.toISOString(),
-        },
-        depth: 0,
-        overrideAccess: true,
-    })
-
-    return cart
+function nextExpiry(): string {
+    return new Date(Date.now() + CART_EXPIRY_MS).toISOString()
 }
 
-/**
- * Add item to cart with upsert logic.
- *
- * If the variant already exists in cart, merges quantity (capped at MAX_QUANTITY).
- * If cart has MAX_CART_ITEMS distinct items, throws CART_FULL error.
- *
- * @param cartId - Cart UUID
- * @param variantId - Product variant ID
- * @param quantity - Quantity to add
- * @param priceAtAdd - Current variant price at time of addition
- * @returns Cart item document
- */
+function isExpired(value: unknown): boolean {
+    return typeof value !== 'string' || new Date(value).getTime() <= Date.now()
+}
+
+function isRecentClaim(startedAt: unknown): boolean {
+    return typeof startedAt === 'string'
+        && Date.now() - new Date(startedAt).getTime() < CART_PROCESSING_TIMEOUT_MS
+}
+
+/** Find, recover, or create the single reusable cart for this tablet session. */
+export async function getOrCreateCart(sessionId: string) {
+    const payload = await getPayloadClient()
+    const existing = await getCartBySession(sessionId)
+
+    if (!existing) {
+        return payload.create({
+            collection: 'carts',
+            data: {
+                session_id: sessionId,
+                expires_at: nextExpiry(),
+            },
+            depth: 0,
+            overrideAccess: true,
+        })
+    }
+
+    if (!isExpired(existing.expires_at)) return existing
+
+    if (existing.processing_key && isRecentClaim(existing.processing_started_at)) {
+        return existing
+    }
+
+    const transactionID = await payload.db.beginTransaction()
+    if (!transactionID) {
+        throw new AppError('Could not recover cart', 500, 'INTERNAL_ERROR')
+    }
+    const req = { transactionID } as PayloadRequest
+
+    try {
+        await clearCart(existing.id, req)
+        const recovered = await payload.update({
+            collection: 'carts',
+            id: existing.id,
+            data: {
+                expires_at: nextExpiry(),
+                processing_key: null,
+                processing_started_at: null,
+            },
+            depth: 0,
+            overrideAccess: true,
+            context: { skipRevalidation: true },
+            req,
+        })
+        await payload.db.commitTransaction(transactionID as string)
+        return recovered
+    } catch (error) {
+        await payload.db.rollbackTransaction(transactionID as string)
+        throw error
+    }
+}
+
 export async function addItemToCart(
     cartId: string | number,
     variantId: number,
-    quantity: number,
-    priceAtAdd: number
+    quantity: number
 ) {
     const payload = await getPayloadClient()
-
-    // Check if variant already in cart (upsert)
     const existing = await payload.find({
         collection: 'cart_items',
         where: {
@@ -94,79 +98,59 @@ export async function addItemToCart(
     })
 
     if (existing.docs[0]) {
-        // Merge quantity (cap at MAX_QUANTITY)
         const existingItem = existing.docs[0]
-        const newQuantity = Math.min(
-            (existingItem.quantity as number) + quantity,
-            MAX_QUANTITY
-        )
-
-        const updated = await payload.update({
+        return payload.update({
             collection: 'cart_items',
             id: existingItem.id,
             data: {
-                quantity: newQuantity,
-                price_at_add: priceAtAdd, // Update price snapshot
+                quantity: Math.min(Number(existingItem.quantity) + quantity, MAX_QUANTITY),
             },
             depth: 0,
             overrideAccess: true,
         })
-
-        return updated
     }
 
-    // Check cart item count limit
-    const itemCount = await getCartItemCount(cartId)
-    if (itemCount >= MAX_CART_ITEMS) {
+    if (await getCartItemCount(cartId) >= MAX_CART_ITEMS) {
         throw new AppError(CART_FULL_MESSAGE, 400, 'CART_FULL')
     }
 
-    // Create new cart item
-    const cartItem = await payload.create({
+    return payload.create({
         collection: 'cart_items',
         data: {
             cart: cartId,
             variant: variantId,
             quantity: Math.min(quantity, MAX_QUANTITY),
-            price_at_add: priceAtAdd,
         },
         depth: 0,
         overrideAccess: true,
     })
-
-    return cartItem
 }
 
-/**
- * Update cart item quantity.
- *
- * @param cartItemId - Cart item ID
- * @param quantity - New quantity (1-10)
- * @returns Updated cart item
- */
-export async function updateCartItem(cartItemId: number, quantity: number) {
+export async function updateCartItem(
+    cartId: string | number,
+    cartItemId: number,
+    quantity: number
+) {
     const payload = await getPayloadClient()
+    const owned = await findOwnedItem(cartId, cartItemId)
+    if (!owned) throw new AppError('Cart item not found', 404, 'NOT_FOUND')
 
-    const updated = await payload.update({
+    return payload.update({
         collection: 'cart_items',
         id: cartItemId,
-        data: {
-            quantity: Math.min(Math.max(quantity, 1), MAX_QUANTITY),
-        },
+        data: { quantity: Math.min(Math.max(quantity, 1), MAX_QUANTITY) },
         depth: 0,
         overrideAccess: true,
     })
-
-    return updated
 }
 
-/**
- * Remove a cart item.
- *
- * @param cartItemId - Cart item ID
- */
-export async function removeCartItem(cartItemId: number): Promise<void> {
+export async function removeCartItem(
+    cartId: string | number,
+    cartItemId: number
+): Promise<void> {
     const payload = await getPayloadClient()
+    const owned = await findOwnedItem(cartId, cartItemId)
+    if (!owned) throw new AppError('Cart item not found', 404, 'NOT_FOUND')
 
     await payload.delete({
         collection: 'cart_items',
@@ -175,63 +159,142 @@ export async function removeCartItem(cartItemId: number): Promise<void> {
     })
 }
 
-/**
- * Clear all items from a cart.
- *
- * @param cartId - Cart UUID
- * @returns Number of items deleted
- */
-export async function clearCart(cartId: string | number): Promise<number> {
+async function findOwnedItem(cartId: string | number, cartItemId: number) {
     const payload = await getPayloadClient()
-
-    const result = await payload.delete({
+    const result = await payload.find({
         collection: 'cart_items',
         where: {
-            cart: { equals: cartId },
+            and: [
+                { id: { equals: cartItemId } },
+                { cart: { equals: cartId } },
+            ],
         },
+        limit: 1,
+        depth: 0,
         overrideAccess: true,
     })
+    return result.docs[0] ?? null
+}
 
+export async function clearCart(
+    cartId: string | number,
+    req?: PayloadRequest
+): Promise<number> {
+    const payload = await getPayloadClient()
+    const result = await payload.delete({
+        collection: 'cart_items',
+        where: { cart: { equals: cartId } },
+        overrideAccess: true,
+        ...(req ? { req } : {}),
+    })
     return result.docs?.length ?? 0
 }
 
-/**
- * Extend cart expiration to 24h from now.
- *
- * Called on every cart action per FR-009.
- *
- * @param cartId - Cart UUID
- */
-export async function extendExpiration(cartId: string | number): Promise<void> {
+export async function extendExpiration(
+    cartId: string | number,
+    req?: PayloadRequest
+): Promise<void> {
     const payload = await getPayloadClient()
-    const expiresAt = new Date(Date.now() + CART_EXPIRY_MS)
-
     await payload.update({
         collection: 'carts',
         id: cartId,
-        data: {
-            expires_at: expiresAt.toISOString(),
-        },
+        data: { expires_at: nextExpiry() },
         depth: 0,
         overrideAccess: true,
+        context: { skipRevalidation: true },
+        ...(req ? { req } : {}),
     })
 }
 
-/**
- * Delete a cart and all its items.
- *
- * @param cartId - Cart UUID
- */
-export async function deleteCart(cartId: string | number): Promise<void> {
+/** Atomically claim an available cart for one idempotent order attempt. */
+export async function claimCart(
+    cartId: string | number,
+    processingKey: string,
+    req: PayloadRequest
+): Promise<boolean> {
     const payload = await getPayloadClient()
-
-    // Delete items first (Payload may not cascade automatically)
-    await clearCart(cartId)
-
-    // Delete the cart
-    await payload.delete({
+    const result = await payload.update({
         collection: 'carts',
-        id: cartId,
+        where: {
+            and: [
+                { id: { equals: cartId } },
+                { processing_key: { exists: false } },
+            ],
+        },
+        limit: 1,
+        data: {
+            processing_key: processingKey,
+            processing_started_at: new Date().toISOString(),
+        },
+        depth: 0,
         overrideAccess: true,
+        context: { skipRevalidation: true },
+        req,
     })
+    return result.docs.length === 1 && result.errors.length === 0
+}
+
+/** Release only claims older than the documented timeout. */
+export async function recoverStaleCartClaim(
+    cartId: string | number,
+    req: PayloadRequest
+): Promise<void> {
+    const payload = await getPayloadClient()
+    const staleBefore = new Date(Date.now() - CART_PROCESSING_TIMEOUT_MS).toISOString()
+    await payload.update({
+        collection: 'carts',
+        where: {
+            and: [
+                { id: { equals: cartId } },
+                { processing_key: { exists: true } },
+                { processing_started_at: { less_than: staleBefore } },
+            ],
+        },
+        limit: 1,
+        data: {
+            processing_key: null,
+            processing_started_at: null,
+        },
+        depth: 0,
+        overrideAccess: true,
+        context: { skipRevalidation: true },
+        req,
+    })
+}
+
+/** Clear this attempt's claim without touching another request's claim. */
+export async function releaseCartClaim(
+    cartId: string | number,
+    processingKey: string,
+    req: PayloadRequest
+): Promise<void> {
+    const payload = await getPayloadClient()
+    await payload.update({
+        collection: 'carts',
+        where: {
+            and: [
+                { id: { equals: cartId } },
+                { processing_key: { equals: processingKey } },
+            ],
+        },
+        limit: 1,
+        data: {
+            processing_key: null,
+            processing_started_at: null,
+            expires_at: nextExpiry(),
+        },
+        depth: 0,
+        overrideAccess: true,
+        context: { skipRevalidation: true },
+        req,
+    })
+}
+
+export async function resetCartAfterOrder(
+    cartId: string | number,
+    processingKey: string,
+    req: PayloadRequest
+): Promise<void> {
+    await clearCart(cartId, req)
+    await releaseCartClaim(cartId, processingKey, req)
 }

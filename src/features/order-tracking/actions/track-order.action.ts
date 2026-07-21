@@ -72,13 +72,11 @@ export async function trackOrderAction(
         const trackedOrder: TrackedOrder = {
             orderNumber: order.orderNumber,
             status: order.status,
-            totalAmount: order.totalAmount,
             createdAt: order.createdAt,
             items: order.items.map((item) => ({
                 productName: item.productName,
                 variantName: item.variantName,
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
             })),
         }
 

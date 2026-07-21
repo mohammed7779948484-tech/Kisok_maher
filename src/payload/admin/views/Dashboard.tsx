@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 
 /**
  * Custom Admin Dashboard Component
@@ -186,24 +187,24 @@ export const Dashboard: React.FC = () => {
         <div className="vx-actions">
           <h2 className="vx-actions__title">Quick Actions</h2>
           <div className="vx-actions__list">
-            <a
+            <Link
               href="/admin/collections/products/create"
               className="vx-actions__btn vx-actions__btn--primary"
             >
               + Create Product
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/collections/orders"
               className="vx-actions__btn vx-actions__btn--secondary"
             >
               📋 View Orders
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/globals/site-settings"
               className="vx-actions__btn vx-actions__btn--secondary"
             >
               ⚙️ Site Settings
-            </a>
+            </Link>
           </div>
         </div>
       </div>

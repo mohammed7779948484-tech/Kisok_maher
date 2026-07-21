@@ -2,7 +2,7 @@
  * Product Variants Collection
  *
  * Product variations (flavors, sizes, nicotine levels, etc.).
- * Each variant has its own price, stock, and SKU.
+ * Each variant has its own stock and SKU. Price is optional and internal-only.
  *
  * @see data-model.md section 5 for schema specification
  */
@@ -15,7 +15,7 @@ export const ProductVariants: CollectionConfig = {
     slug: 'product_variants',
     admin: {
         useAsTitle: 'variant_name',
-        defaultColumns: ['variant_name', 'product', 'sku', 'price', 'stock_quantity', 'is_active'],
+        defaultColumns: ['variant_name', 'product', 'sku', 'stock_quantity', 'is_active'],
         group: 'Catalog',
         description: 'Product variations with individual pricing and stock',
     },
@@ -55,14 +55,25 @@ export const ProductVariants: CollectionConfig = {
             },
         },
         {
-            name: 'price',
-            type: 'number',
-            required: true,
-            min: 0,
+            type: 'collapsible',
+            label: 'Internal Pricing',
             admin: {
-                description: 'Unit price in USD',
-                step: 0.01,
+                initCollapsed: true,
             },
+            fields: [
+                {
+                    name: 'price',
+                    type: 'number',
+                    min: 0,
+                    access: {
+                        read: ({ req }) => Boolean(req.user),
+                    },
+                    admin: {
+                        description: 'Optional internal unit price; never shown on the kiosk',
+                        step: 0.01,
+                    },
+                },
+            ],
         },
         {
             name: 'stock_quantity',

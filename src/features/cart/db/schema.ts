@@ -16,8 +16,8 @@ import type { CollectionConfig } from 'payload'
  * Session-linked shopping cart.
  * - UUID primary key for security/scale
  * - Unique session_id links to gate session
- * - Expires after 24h of inactivity
- * - Cleaned up by automated cron job
+ * - Contents expire after 20 minutes of inactivity
+ * - The row is reused for sequential customers on the same tablet session
  */
 export const Carts: CollectionConfig = {
     slug: 'carts',
@@ -49,7 +49,28 @@ export const Carts: CollectionConfig = {
             required: true,
             index: true,
             admin: {
-                description: '24h from last activity — extended on each cart update',
+                description: 'Content expiry — extended on each cart update',
+                date: {
+                    pickerAppearance: 'dayAndTime',
+                },
+            },
+        },
+        {
+            name: 'processing_key',
+            type: 'text',
+            index: true,
+            admin: {
+                readOnly: true,
+                description: 'Temporary idempotency key while an order is being created',
+            },
+        },
+        {
+            name: 'processing_started_at',
+            type: 'date',
+            index: true,
+            admin: {
+                readOnly: true,
+                description: 'Used to recover an abandoned order claim after two minutes',
                 date: {
                     pickerAppearance: 'dayAndTime',
                 },
@@ -64,14 +85,14 @@ export const Carts: CollectionConfig = {
  *
  * Individual items within a cart (relational, NOT embedded).
  * - One variant per cart only (upsert on duplicate)
- * - price_at_add captures price at time of addition for live change detection
+ * - Legacy price_at_add is retained only to avoid a destructive column drop
  * - Cascading delete when parent cart is removed
  */
 export const CartItems: CollectionConfig = {
     slug: 'cart_items',
     admin: {
         useAsTitle: 'id',
-        defaultColumns: ['cart', 'variant', 'quantity', 'price_at_add'],
+        defaultColumns: ['cart', 'variant', 'quantity'],
         group: 'Commerce',
     },
     access: {
@@ -115,10 +136,10 @@ export const CartItems: CollectionConfig = {
         {
             name: 'price_at_add',
             type: 'number',
-            required: true,
             min: 0,
             admin: {
-                description: 'Price when item was added (for live price change detection)',
+                hidden: true,
+                description: 'Legacy compatibility field; not used by the kiosk flow',
             },
         },
     ],

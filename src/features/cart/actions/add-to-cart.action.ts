@@ -82,6 +82,10 @@ export async function addToCartAction(
         // 4. Get or create cart for session
         const cart = await getOrCreateCart(session.sessionId)
 
+        if (cart.processing_key) {
+            return { success: false, error: 'Order is being submitted', code: 'CART_BUSY' }
+        }
+
         // 5. PREVENT EXCEEDING STOCK LIMIT: Check how many are ALREADY in the cart
         const payload = await getPayloadClient()
         const existingItem = await payload.find({
@@ -109,10 +113,10 @@ export async function addToCartAction(
         }
 
         // 6. Add/upsert item to cart
-        await addItemToCart(cart.id, variantId, quantity, variantInfo.price)
+        await addItemToCart(cart.id, variantId, quantity)
 
-        // 6. Extend expiration in background (Fire-and-forget, Zero latency)
-        Promise.allSettled([extendExpiration(cart.id)])
+        // Keep this await: the next customer must not inherit an unexpectedly expired cart.
+        await extendExpiration(cart.id)
 
         const cartItemCount = await getCartItemCount(cart.id)
 

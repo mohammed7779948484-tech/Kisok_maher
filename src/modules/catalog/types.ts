@@ -35,7 +35,6 @@ export interface CatalogVariant {
     id: number
     variantName: string
     sku: string
-    price: number
     stockQuantity: number
     images: string[]
     cloudinaryPublicIds: string[]
@@ -56,8 +55,6 @@ export interface CatalogProduct {
     brandSlug: string | null
     categories: Array<{ id: number; name: string; slug: string }>
     variants: CatalogVariant[]
-    minPrice: number
-    maxPrice: number
     totalStock: number
     isActive: boolean
 }
@@ -70,8 +67,6 @@ export interface ProductCardData {
     imageUrl: string | null
     cloudinaryPublicId: string | null
     brandName: string | null
-    minPrice: number
-    maxPrice: number
     variantCount: number
     inStock: boolean
 }
@@ -96,8 +91,6 @@ export interface PaginatedResult<T> {
 export interface ProductFilters {
     brandSlug?: string
     categorySlug?: string
-    minPrice?: number
-    maxPrice?: number
     inStock?: boolean
     search?: string
 }

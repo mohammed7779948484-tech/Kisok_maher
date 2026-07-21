@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { CloudinaryImage } from '@/shared/ui/CloudinaryImage'
 
-import { CURRENCY_SYMBOL, PLACEHOLDER_IMAGE } from '../../constants'
+import { PLACEHOLDER_IMAGE } from '../../constants'
 import { VariantSelector } from '../VariantSelector'
 
 import type { CatalogVariant } from '../../types'
@@ -11,21 +11,17 @@ import type { CatalogVariant } from '../../types'
 export interface ProductInteractiveProps {
     variants: CatalogVariant[]
     totalStock: number
-    minPrice: number
-    maxPrice: number
     unitLabel?: string
     imageUrl?: string | null
     cloudinaryPublicId?: string | null
     productName: string
     brandName?: string | null
     description?: string | null
-    ActionComponent?: React.ComponentType<{ variantId: number; price: number; stockQuantity: number; quantity: number }> | undefined
+    ActionComponent?: React.ComponentType<{ variantId: number; stockQuantity: number; quantity: number }> | undefined
 }
 
 export function ProductInteractive({
     variants,
-    minPrice,
-    maxPrice,
     totalStock,
     unitLabel,
     imageUrl,
@@ -70,13 +66,6 @@ export function ProductInteractive({
     const displayTitle = selectedVariant
         ? `${productName} - ${selectedVariant.variantName}`
         : productName
-
-    // Dynamic price
-    const displayPrice = selectedVariant
-        ? `${CURRENCY_SYMBOL}${selectedVariant.price.toFixed(2)}`
-        : minPrice === maxPrice
-            ? `${CURRENCY_SYMBOL}${minPrice.toFixed(2)}`
-            : `From ${CURRENCY_SYMBOL}${minPrice.toFixed(2)}`
 
     const displayStock = selectedVariant ? selectedVariant.stockQuantity : totalStock
 
@@ -145,18 +134,6 @@ export function ProductInteractive({
                     <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
                         {displayTitle}
                     </h1>
-                </div>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-bold text-foreground">
-                        {displayPrice}
-                    </p>
-                    {unitLabel && unitLabel !== 'Unit' && (
-                        <span className="text-sm text-muted-foreground">
-                            / {unitLabel}
-                        </span>
-                    )}
                 </div>
 
                 {/* Stock Status */}

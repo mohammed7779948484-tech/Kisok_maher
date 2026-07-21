@@ -36,8 +36,9 @@ export {
     TRACKING_RATE_INTERVAL,
     MAX_QUANTITY,
     MAX_CART_ITEMS,
-    CART_EXPIRY_HOURS,
+    CART_EXPIRY_MINUTES,
     CART_EXPIRY_MS,
+    CART_PROCESSING_TIMEOUT_MS,
     MIN_QUANTITY,
     CART_FULL_MESSAGE,
     ORDER_NUMBER_REGEX,
@@ -53,14 +54,13 @@ export type {
     StockDecrementResult,
     CheckoutResult,
     TrackOrderResult,
-    LookupOrdersResult,
 } from './types'
 
 // ─── Services ─────────────────────────────────────────────────
 export { OrderService } from './services/order.service'
 export { StockService } from './services/stock.service'
 export { OrderQueryService } from './services/order-query.service'
-export type { OrderWithItems, OrderSummary } from './services/order-query.service'
+export type { OrderWithItems } from './services/order-query.service'
 
 // ─── Validators ───────────────────────────────────────────────
 export {

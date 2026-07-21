@@ -6,8 +6,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock Payload client
-const mockPayloadFind = vi.fn()
-const mockPayloadFindByID = vi.fn()
+const { mockPayloadFind, mockPayloadFindByID } = vi.hoisted(() => ({
+    mockPayloadFind: vi.fn(),
+    mockPayloadFindByID: vi.fn(),
+}))
 
 vi.mock('@/lib/payload', () => ({
     getPayloadClient: vi.fn().mockResolvedValue({
@@ -153,7 +155,9 @@ describe('Product Service', () => {
             expect(result?.name).toBe('Test Product')
             expect(result?.slug).toBe('test-product')
             expect(result?.variants).toHaveLength(1)
-            expect(result?.minPrice).toBe(25.99)
+            expect(result?.variants[0]).not.toHaveProperty('price')
+            expect(result).not.toHaveProperty('minPrice')
+            expect(result).not.toHaveProperty('maxPrice')
         })
 
         it('should return null when product not found', async () => {

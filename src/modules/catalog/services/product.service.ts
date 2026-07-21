@@ -38,7 +38,6 @@ function toVariant(raw: Record<string, unknown>): CatalogVariant {
         id: raw.id as number,
         variantName: raw.variant_name as string,
         sku: raw.sku as string,
-        price: raw.price as number,
         stockQuantity: raw.stock_quantity as number,
         images,
         cloudinaryPublicIds,
@@ -78,8 +77,6 @@ function toProduct(raw: Record<string, unknown>): CatalogProduct {
         : []
 
     const activeVariants = variants.filter((v) => v.isActive)
-    const prices = activeVariants.map((v) => v.price)
-
     const brand = raw.brand as Record<string, unknown> | null
     const categories = Array.isArray(raw.categories)
         ? raw.categories.map((c: Record<string, unknown>) => ({
@@ -101,8 +98,6 @@ function toProduct(raw: Record<string, unknown>): CatalogProduct {
         brandSlug: brand ? (brand.slug as string) : null,
         categories,
         variants: activeVariants,
-        minPrice: prices.length > 0 ? Math.min(...prices) : 0,
-        maxPrice: prices.length > 0 ? Math.max(...prices) : 0,
         totalStock: activeVariants.reduce((sum, v) => sum + v.stockQuantity, 0),
         isActive: raw.is_active as boolean,
     }
@@ -116,7 +111,6 @@ function toCardData(raw: Record<string, unknown>): ProductCardData {
         ? raw.variants.filter((v: Record<string, unknown>) => v.is_active)
         : []
 
-    const prices = variants.map((v: Record<string, unknown>) => v.price as number)
     const totalStock = variants.reduce(
         (sum: number, v: Record<string, unknown>) => sum + (v.stock_quantity as number),
         0
@@ -131,8 +125,6 @@ function toCardData(raw: Record<string, unknown>): ProductCardData {
         imageUrl: extractImageUrl(raw.image),
         cloudinaryPublicId: extractCloudinaryPublicId(raw.image),
         brandName: brand ? (brand.name as string) : null,
-        minPrice: prices.length > 0 ? Math.min(...prices) : 0,
-        maxPrice: prices.length > 0 ? Math.max(...prices) : 0,
         variantCount: variants.length,
         inStock: totalStock > 0,
     }

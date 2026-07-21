@@ -14,7 +14,7 @@ export function TrackOrderSection(): React.ReactElement {
                     Track Your Order
                 </h2>
                 <p className="text-muted-foreground text-sm max-w-lg">
-                    Stay updated on your luxury order. Enter your order or phone number below.
+                    Enter the order number shown after confirmation.
                 </p>
             </div>
 

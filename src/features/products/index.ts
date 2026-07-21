@@ -31,7 +31,6 @@ export type {
 // Constants
 export {
     PRODUCTS_PER_PAGE,
-    CURRENCY_SYMBOL,
     PLACEHOLDER_IMAGE,
 } from './constants'
 

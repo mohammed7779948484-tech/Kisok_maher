@@ -33,7 +33,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                             Curated Brands
                         </h2>
                         <p className="text-muted-foreground text-sm max-w-lg">
-                            Explore our selection from the world's most distinguished vape manufacturers.
+                            Explore our selection from the world&apos;s most distinguished vape manufacturers.
                         </p>
                     </div>
                     <BrandGrid brands={brands} />
@@ -48,7 +48,7 @@ export default async function HomePage(): Promise<React.ReactElement> {
                             Shop by Category
                         </h2>
                         <p className="text-muted-foreground text-sm max-w-lg">
-                            Find exactly what you're looking for, from premium hardware to exquisite juices.
+                            Find exactly what you&apos;re looking for, from premium hardware to exquisite juices.
                         </p>
                     </div>
                     <CategoryGrid categories={categories} />

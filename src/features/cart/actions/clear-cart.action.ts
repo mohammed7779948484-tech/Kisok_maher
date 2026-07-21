@@ -16,8 +16,7 @@ import { verifySession } from '@/core/auth/session'
 import { AppError } from '@/core/errors'
 import { Logger } from '@/core/logger'
 import type { ActionResult } from '@/modules/orders'
-import { clearCart } from '@/features/cart/db/mutations'
-import { getCartBySession } from '@/features/cart/db/queries'
+import { clearCart, getOrCreateCart, extendExpiration } from '@/features/cart/db/mutations'
 import type { ClearCartResult } from '@/features/cart/types'
 
 const logger = new Logger()
@@ -40,13 +39,14 @@ export async function clearCartAction(): Promise<ActionResult<ClearCartResult>> 
         }
 
         // 2. Get cart for session (ownership verification)
-        const cart = await getCartBySession(session.sessionId)
-        if (!cart) {
-            return { success: false, error: 'Cart not found', code: 'NOT_FOUND' }
+        const cart = await getOrCreateCart(session.sessionId)
+        if (cart.processing_key) {
+            return { success: false, error: 'Order is being submitted', code: 'CART_BUSY' }
         }
 
         // 3. Clear all cart items
         const clearedCount = await clearCart(cart.id)
+        await extendExpiration(cart.id)
 
         // Revalidate cart-related pages
         revalidatePath('/', 'layout')

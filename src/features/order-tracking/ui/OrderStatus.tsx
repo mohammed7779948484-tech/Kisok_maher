@@ -1,7 +1,7 @@
 /**
  * Order Status Component
  *
- * Displays full order details with status timeline, items list, and total.
+ * Displays privacy-safe order status and item details.
  * Used on the track-order page after successful order lookup.
  *
  * @see spec.md: FR-032 (status timeline), US4 acceptance criteria
@@ -10,7 +10,7 @@
 
 import { Separator } from '@/shared/ui/separator'
 
-import { STATUS_LABELS, STATUS_DESCRIPTIONS, CURRENCY_SYMBOL } from '../constants'
+import { STATUS_LABELS, STATUS_DESCRIPTIONS } from '../constants'
 import type { TrackedOrder, TimelineStep } from '../types'
 import { StatusTimeline } from './_components/StatusTimeline'
 
@@ -79,11 +79,6 @@ export function OrderStatus({ order }: OrderStatusProps): React.ReactElement {
                         })}
                     </p>
                 </div>
-                <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">
-                        {CURRENCY_SYMBOL}{order.totalAmount.toFixed(2)}
-                    </p>
-                </div>
             </div>
 
             <Separator />
@@ -111,23 +106,11 @@ export function OrderStatus({ order }: OrderStatusProps): React.ReactElement {
                                     {item.variantName} × {item.quantity}
                                 </p>
                             </div>
-                            <p className="font-medium">
-                                {CURRENCY_SYMBOL}{(item.unitPrice * item.quantity).toFixed(2)}
-                            </p>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <Separator />
-
-            {/* Total */}
-            <div className="flex items-center justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-primary">
-                    {CURRENCY_SYMBOL}{order.totalAmount.toFixed(2)}
-                </span>
-            </div>
         </div>
     )
 }

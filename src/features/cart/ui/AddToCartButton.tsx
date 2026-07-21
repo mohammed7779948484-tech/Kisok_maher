@@ -8,7 +8,6 @@ import { Loader2, ShoppingCart } from 'lucide-react'
 
 export interface AddToCartButtonProps {
     variantId: number
-    price: number
     stockQuantity: number
     quantity: number
 }
