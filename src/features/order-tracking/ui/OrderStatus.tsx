@@ -68,10 +68,10 @@ export function OrderStatus({ order }: OrderStatusProps): React.ReactElement {
             {/* Order Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
+                    <h2 className="text-headline-small text-on-surface tabular-nums">
                         Order {order.orderNumber}
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-2 text-body-medium text-on-surface-variant tabular-nums">
                         Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -85,7 +85,7 @@ export function OrderStatus({ order }: OrderStatusProps): React.ReactElement {
 
             {/* Status Timeline */}
             <div>
-                <h3 className="mb-4 text-lg font-semibold">Order Status</h3>
+                <h3 className="mb-4 text-title-medium text-on-surface">Order status</h3>
                 <StatusTimeline steps={steps} />
             </div>
 
@@ -93,17 +93,17 @@ export function OrderStatus({ order }: OrderStatusProps): React.ReactElement {
 
             {/* Order Items */}
             <div>
-                <h3 className="mb-3 text-lg font-semibold">Items Ordered</h3>
+                <h3 className="mb-3 text-title-medium text-on-surface">Items ordered</h3>
                 <div className="space-y-3">
                     {order.items.map((item) => (
                         <div
                             key={`${item.productName}-${item.variantName}`}
-                            className="flex items-center justify-between rounded-lg border border-border/50 px-4 py-3"
+                            className="flex items-center justify-between rounded-medium border border-outline-variant bg-surface-container-low px-4 py-3"
                         >
                             <div>
-                                <p className="font-medium">{item.productName}</p>
-                                <p className="text-sm text-muted-foreground">
-                                    {item.variantName} × {item.quantity}
+                                <p className="text-title-small text-on-surface">{item.productName}</p>
+                                <p className="mt-1 text-body-small text-on-surface-variant">
+                                    {item.variantName} <span className="tabular-nums">× {item.quantity}</span>
                                 </p>
                             </div>
                         </div>

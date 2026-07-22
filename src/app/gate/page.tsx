@@ -9,12 +9,13 @@
 
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { brandConfig } from '@/shared/config'
 
 import { verifySession } from '@/core/auth/session'
 import { GateScreen } from '@/features/gate'
 
 export const metadata: Metadata = {
-    title: 'Enter Password | Dragon',
+    title: `Enter Password | ${brandConfig.displayName}`,
     robots: { index: false, follow: false },
 }
 

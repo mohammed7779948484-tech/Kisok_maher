@@ -1,179 +1,98 @@
 'use client'
 
 import { useState } from 'react'
-import { CloudinaryImage } from '@/shared/ui/CloudinaryImage'
+
+import { CloudinaryImage, StatusBadge } from '@/shared/ui'
+import { cn } from '@/shared/lib/utils'
 
 import { PLACEHOLDER_IMAGE } from '../../constants'
+import type { CatalogVariant } from '../../types'
 import { VariantSelector } from '../VariantSelector'
 
-import type { CatalogVariant } from '../../types'
-
 export interface ProductInteractiveProps {
-    variants: CatalogVariant[]
-    totalStock: number
-    unitLabel?: string
-    imageUrl?: string | null
-    cloudinaryPublicId?: string | null
-    productName: string
-    brandName?: string | null
-    description?: string | null
-    ActionComponent?: React.ComponentType<{ variantId: number; stockQuantity: number; quantity: number }> | undefined
+  variants: CatalogVariant[]
+  totalStock: number
+  unitLabel?: string
+  imageUrl?: string | null
+  cloudinaryPublicId?: string | null
+  productName: string
+  brandName?: string | null
+  description?: string | null
+  ActionComponent?: React.ComponentType<{ variantId: number; stockQuantity: number; quantity: number }> | undefined
 }
 
-export function ProductInteractive({
-    variants,
-    totalStock,
-    unitLabel,
-    imageUrl,
-    cloudinaryPublicId,
-    productName,
-    brandName,
-    description,
-    ActionComponent,
-}: ProductInteractiveProps): React.ReactElement {
-    // Default to the first active variant
-    const [selectedVariantId, setSelectedVariantId] = useState<number | null>(
-        variants[0]?.id ?? null
-    )
+export function ProductInteractive({ variants, totalStock, unitLabel, imageUrl, cloudinaryPublicId, productName, brandName, description, ActionComponent }: ProductInteractiveProps): React.ReactElement {
+  const [selectedVariantId, setSelectedVariantId] = useState<number | null>(variants[0]?.id ?? null)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const selectedVariant = variants.find((variant) => variant.id === selectedVariantId)
 
-    // Active gallery image index
-    const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const handleVariantSelect = (variantId: number) => {
+    setSelectedVariantId(variantId)
+    setActiveImageIndex(0)
+  }
 
-    const selectedVariant = variants.find((v) => v.id === selectedVariantId)
+  const galleryImages: string[] = selectedVariant && selectedVariant.images.length > 0
+    ? selectedVariant.images
+    : imageUrl ? [imageUrl] : [PLACEHOLDER_IMAGE]
 
-    // Reset gallery index when variant changes
-    const handleVariantSelect = (variantId: number) => {
-        setSelectedVariantId(variantId)
-        setActiveImageIndex(0)
-    }
+  const galleryPublicIds: (string | null)[] = selectedVariant && selectedVariant.cloudinaryPublicIds && selectedVariant.cloudinaryPublicIds.length > 0
+    ? selectedVariant.cloudinaryPublicIds
+    : [cloudinaryPublicId || null]
 
-    // Build image galleries mapping for both raw URLs (fallback) and explicit public IDs (primary)
-    const galleryImages: string[] = selectedVariant && selectedVariant.images.length > 0
-        ? selectedVariant.images
-        : imageUrl
-            ? [imageUrl]
-            : [PLACEHOLDER_IMAGE]
+  const displayImage = galleryImages[activeImageIndex] || galleryImages[0] || PLACEHOLDER_IMAGE
+  const displayPublicId = galleryPublicIds[activeImageIndex] || galleryPublicIds[0] || null
+  const displayTitle = selectedVariant ? `${productName} - ${selectedVariant.variantName}` : productName
+  const displayStock = selectedVariant ? selectedVariant.stockQuantity : totalStock
 
-    const galleryPublicIds: (string | null)[] = selectedVariant && selectedVariant.cloudinaryPublicIds && selectedVariant.cloudinaryPublicIds.length > 0
-        ? selectedVariant.cloudinaryPublicIds
-        : [cloudinaryPublicId || null]
-
-    // Determine currently displayed items
-    const displayImage = galleryImages[activeImageIndex] || galleryImages[0] || PLACEHOLDER_IMAGE
-    const displayPublicId = galleryPublicIds[activeImageIndex] || galleryPublicIds[0] || null
-
-    // Dynamic title: "Product Name - Variant Name"
-    const displayTitle = selectedVariant
-        ? `${productName} - ${selectedVariant.variantName}`
-        : productName
-
-    const displayStock = selectedVariant ? selectedVariant.stockQuantity : totalStock
-
-    return (
-        <div className="grid gap-8 md:grid-cols-2">
-            {/* Left: Dynamic Image Gallery */}
-            <div className="space-y-3">
-                <div className="relative aspect-square overflow-hidden rounded-[var(--radius-xl)] bg-muted">
-                    <CloudinaryImage
-                        src={displayImage}
-                        publicId={displayPublicId}
-                        alt={displayTitle}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover transition-all duration-300"
-                        priority
-                    />
-                </div>
-
-                {/* Thumbnail Gallery (only if more than 1 image) */}
-                {galleryImages.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                        {galleryImages.map((img, index) => {
-                            const pId = galleryPublicIds[index] || null;
-                            return (
-                                <button
-                                    key={`thumb-${index}`}
-                                    type="button"
-                                    onClick={() => setActiveImageIndex(index)}
-                                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-[var(--radius-lg)] border-2 transition-all duration-200 ${index === activeImageIndex
-                                        ? 'border-primary ring-1 ring-primary'
-                                        : 'border-border hover:border-primary/50'
-                                        }`}
-                                >
-                                    <CloudinaryImage
-                                        src={img}
-                                        publicId={pId}
-                                        alt={`${displayTitle} - Image ${index + 1}`}
-                                        fill
-                                        sizes="64px"
-                                        className="object-cover"
-                                    />
-                                </button>
-                            )
-                        })}
-                    </div>
-                )}
-
-                {/* Viewing indicator */}
-                {selectedVariant && (
-                    <p className="text-center text-xs text-muted-foreground">
-                        Viewing: {selectedVariant.variantName}
-                    </p>
-                )}
-            </div>
-
-            {/* Right: Info + Interactive */}
-            <div className="flex flex-col gap-6">
-                {/* Header */}
-                <div>
-                    {brandName && (
-                        <p className="text-sm font-medium uppercase tracking-wider text-primary">
-                            {brandName}
-                        </p>
-                    )}
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground">
-                        {displayTitle}
-                    </h1>
-                </div>
-
-                {/* Stock Status */}
-                <div className="flex items-center gap-2">
-                    <span
-                        className={`inline-block h-2.5 w-2.5 rounded-full ${displayStock > 0 ? 'bg-primary' : 'bg-destructive'
-                            }`}
-                    />
-                    <span className="text-sm font-medium text-foreground">
-                        {displayStock > 0 ? `In Stock (${displayStock} ${unitLabel}s)` : 'Out of Stock'}
-                    </span>
-                </div>
-
-                {/* Variants with per-variant Action Buttons */}
-                {variants.length > 0 && (
-                    <VariantSelector
-                        variants={variants}
-                        selectedVariantId={selectedVariantId}
-                        onSelect={handleVariantSelect}
-                        ActionComponent={ActionComponent}
-                    />
-                )}
-
-                {/* Description */}
-                {description && (
-                    <div className="mt-4 border-t border-border pt-6">
-                        <h2 className="mb-3 text-sm font-semibold text-foreground">
-                            Description
-                        </h2>
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
-                            {typeof description === 'string' ? (
-                                <p>{description}</p>
-                            ) : (
-                                <p>See full details above.</p>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
+  return (
+    <div className="grid gap-8 medium:grid-cols-[minmax(0,1fr)_minmax(340px,0.9fr)] expanded:gap-10">
+      <section aria-label="Product images" className="space-y-3">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-large border border-outline-variant bg-surface-container shadow-elevation-1">
+          <CloudinaryImage alt={displayTitle} className="object-cover transition-opacity duration-standard" fill priority publicId={displayPublicId} sizes="(max-width: 719px) 100vw, 55vw" src={displayImage} />
         </div>
-    )
-}
 
+        {galleryImages.length > 1 && (
+          <div aria-label="Product image gallery" className="flex gap-2 overflow-x-auto pb-2" role="group">
+            {galleryImages.map((image, index) => {
+              const publicId = galleryPublicIds[index] || null
+              const isActive = index === activeImageIndex
+              return (
+                <button
+                  aria-label={`View image ${index + 1} of ${displayTitle}`}
+                  aria-pressed={isActive}
+                  className={cn('relative h-touch w-touch shrink-0 overflow-hidden rounded-medium border-2 bg-surface', isActive ? 'border-primary ring-2 ring-focus-ring/30' : 'border-outline-variant hover:border-primary/50')}
+                  key={`thumb-${index}`}
+                  onClick={() => setActiveImageIndex(index)}
+                  type="button"
+                >
+                  <CloudinaryImage alt="" className="object-cover" fill publicId={publicId} sizes="48px" src={image} />
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {selectedVariant && <p className="text-center text-body-small text-on-surface-variant">Viewing: {selectedVariant.variantName}</p>}
+      </section>
+
+      <section className="flex flex-col gap-6" aria-labelledby="product-title">
+        <div>
+          {brandName && <p className="text-label-medium uppercase tracking-wider text-primary">{brandName}</p>}
+          <h1 className="mt-2 text-headline-large text-on-surface" id="product-title">{displayTitle}</h1>
+          <div className="mt-4"><StatusBadge tone={displayStock > 0 ? 'success' : 'destructive'}>{displayStock > 0 ? `In stock (${displayStock} ${unitLabel}s)` : 'Out of stock'}</StatusBadge></div>
+        </div>
+
+        {variants.length > 0 && (
+          <VariantSelector ActionComponent={ActionComponent} onSelect={handleVariantSelect} selectedVariantId={selectedVariantId} variants={variants} />
+        )}
+
+        {description && (
+          <div className="border-t border-outline-variant pt-6">
+            <h2 className="mb-3 text-title-medium text-on-surface">Description</h2>
+            <div className="customer-rich-text">{typeof description === 'string' ? <p>{description}</p> : <p>See full details above.</p>}</div>
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}

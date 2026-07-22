@@ -21,6 +21,9 @@ export { createOrder } from './db/mutations'
 export { processCheckoutAction } from './actions/process-checkout.action'
 export { placeOrderAction } from './actions/place-order.action'
 
+// ─── UI ───────────────────────────────────────────────────────
+export { OrderConfirmation } from './ui/OrderConfirmation'
+
 // ─── Types ────────────────────────────────────────────────────
 export type {
     OrderConfirmationData,

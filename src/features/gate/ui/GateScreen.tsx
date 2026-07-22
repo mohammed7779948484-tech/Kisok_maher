@@ -1,65 +1,34 @@
-'use client'
+import { LockKeyhole } from 'lucide-react'
 
-/**
- * GateScreen Component
- * 
- * Client Component acting as the entry gate for the store.
- * Incorporates Framer Motion staggering and matches the site's subtle luxury aesthetics.
- */
+import { BrandLogo, Card, CardContent } from '@/shared/ui'
+import { brandConfig } from '@/shared/config'
 
-import { motion } from 'framer-motion'
-import { staggerContainer, fadeUp } from '@/shared/ui/motion/variants'
 import { GateForm } from './GateForm'
 
 export function GateScreen(): React.ReactElement {
-    return (
-        <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-12 overflow-hidden">
-            {/* Subtle luxurious ambient glow behind the form, matching HeroSection */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 0.05, scale: 1 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                    className="h-[500px] w-[500px] rounded-full bg-primary blur-[120px]"
-                />
+  return (
+    <main className="premium-canvas flex min-h-screen items-center justify-center bg-background px-4 py-8">
+      <div className="refined-reveal w-full max-w-dialog">
+        <div className="mb-8 text-center">
+          <BrandLogo className="justify-center" iconClassName="h-16 w-16" />
+          <h1 className="mt-6 text-headline-large text-on-surface">Welcome to {brandConfig.displayName}</h1>
+          <p className="mx-auto mt-3 max-w-sm text-body-large text-on-surface-variant">
+            Enter the shared store password to begin a private kiosk session.
+          </p>
+        </div>
+
+        <Card className="rounded-extra-large shadow-elevation-3">
+          <CardContent className="p-6 medium:p-8">
+            <div className="mb-6 flex items-center gap-3 rounded-medium bg-information-container p-4 text-information">
+              <LockKeyhole aria-hidden="true" className="h-5 w-5 shrink-0" />
+              <p className="text-body-medium">Access is limited to authorized store visitors.</p>
             </div>
+            <GateForm />
+          </CardContent>
+        </Card>
 
-            <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="show"
-                className="relative z-10 w-full max-w-md space-y-8"
-            >
-                {/* Brand Identity / Welcome */}
-                <motion.div variants={fadeUp} className="text-center space-y-4">
-                    <div className="mx-auto flex justify-center">
-                        <img src="/logo.png" alt="Dragon Logo" className="h-28 w-auto object-contain drop-shadow-lg" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                            Dragon
-                        </h1>
-                        <p className="text-muted-foreground text-sm">
-                            Please enter the password to access the store.
-                        </p>
-                    </div>
-                </motion.div>
-
-                {/* Gate Form Card */}
-                <motion.div
-                    variants={fadeUp}
-                    className="rounded-[var(--radius-xl)] bg-card border border-border p-6 sm:p-8 shadow-sm"
-                >
-                    <GateForm />
-                </motion.div>
-
-                {/* Footer Security Note */}
-                <motion.div variants={fadeUp} className="text-center">
-                    <p className="text-xs text-muted-foreground/70">
-                        This is a private storefront.
-                    </p>
-                </motion.div>
-            </motion.div>
-        </main>
-    )
+        <p className="mt-6 text-center text-body-small text-on-surface-variant">This is a private storefront.</p>
+      </div>
+    </main>
+  )
 }

@@ -1,51 +1,35 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { motion } from "framer-motion"
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-import { cn } from "@/shared/lib/utils"
-import { scaleTap } from "@/shared/ui/motion/variants"
+import { cn } from '@/shared/lib/utils'
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-[var(--radius-md)] border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  'inline-flex items-center gap-1 rounded-small border px-3 py-1 text-label-small focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+        default: 'border-transparent bg-primary-container text-primary-container-foreground',
+        secondary: 'border-transparent bg-secondary-container text-secondary-container-foreground',
+        success: 'border-success/20 bg-success-container text-success',
+        warning: 'border-warning/20 bg-warning-container text-warning',
+        information: 'border-information/20 bg-information-container text-information',
+        destructive: 'border-destructive/20 bg-destructive-container text-destructive-container-foreground',
+        neutral: 'border-neutral/20 bg-neutral-container text-neutral',
+        outline: 'border-outline text-on-surface',
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: 'default',
     },
   }
 )
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-  VariantProps<typeof badgeVariants> { }
+  VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, ...props }: BadgeProps) {
-  // Only apply interactions if onClick is passed, making it an interactive badge
-  if (props.onClick) {
-    return (
-      <motion.div
-        className={cn(badgeVariants({ variant }), className, "cursor-pointer")}
-        variants={scaleTap}
-        whileHover="hover"
-        whileTap="tap"
-        {...(props as any)}
-      />
-    )
-  }
-
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  )
+function Badge({ className, variant, ...props }: BadgeProps): React.ReactElement {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
 export { Badge, badgeVariants }

@@ -23,11 +23,11 @@ export function CartDrawer({ items }: CartDrawerProps): React.ReactElement {
 
     return (
         <Sheet open={isDrawerOpen} onOpenChange={closeDrawer}>
-            <SheetContent className="flex w-full flex-col sm:max-w-md">
-                <SheetHeader><SheetTitle className="text-left">Shopping Cart ({totalQuantity})</SheetTitle></SheetHeader>
+            <SheetContent className="flex w-full flex-col">
+                <SheetHeader><SheetTitle>Shopping cart <span className="tabular-nums">({totalQuantity})</span></SheetTitle></SheetHeader>
                 {items.length === 0 ? <EmptyCart /> : (
                     <>
-                        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex-1 space-y-2 overflow-y-auto py-2">
+                        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex-1 space-y-3 overflow-y-auto py-4 pr-1">
                             <AnimatePresence mode="popLayout">
                                 {items.map((item) => (
                                     <motion.div key={item.id} variants={fadeUp} layout exit={{ opacity: 0, scale: 0.9 }}>
@@ -40,6 +40,7 @@ export function CartDrawer({ items }: CartDrawerProps): React.ReactElement {
                             itemCount={totalQuantity}
                             cartFingerprint={fingerprint}
                             hasInactiveItems={items.some((item) => !item.isActive)}
+                            showCartLink
                         />
                     </>
                 )}

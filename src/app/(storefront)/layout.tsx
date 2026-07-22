@@ -2,7 +2,7 @@
  * Storefront Layout
  *
  * Main layout for the public storefront.
- * Includes Header, Footer, WhatsApp button.
+ * Includes Header and Footer.
  * Verifies session via DAL (NOT middleware).
  */
 
@@ -14,23 +14,22 @@ import '../globals.css'
 import { Providers } from '../providers'
 import { Header } from '@/widgets/header'
 import { Footer } from '@/widgets/footer'
-import { WhatsAppButton } from '@/widgets/whatsapp-button'
 import { verifySession } from '@/core/auth/session'
+import { brandConfig } from '@/shared/config'
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-inter',
 })
 
 export const metadata: Metadata = {
-  title: 'Dragon — Premium Vape Products',
-  description: 'Private e-commerce platform for premium vape products',
+  title: `${brandConfig.displayName} — In-store catalog`,
+  description: brandConfig.description,
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default async function StorefrontLayout({
@@ -45,15 +44,17 @@ export default async function StorefrontLayout({
   }
 
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
-      <body className="min-h-screen bg-background font-sans text-foreground antialiased text-base">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-background font-sans text-on-surface antialiased">
         <Providers>
+          <a className="fixed left-4 top-4 z-50 -translate-y-24 rounded-medium bg-primary px-4 py-3 text-label-large text-primary-foreground shadow-elevation-3 transition-transform duration-fast focus:translate-y-0" href="#main-content">
+            Skip to content
+          </a>
           <Header />
-          <main className="min-h-[calc(100vh-4rem)]">
+          <main className="min-h-[calc(100vh-4rem)]" id="main-content">
             {children}
           </main>
           <Footer />
-          <WhatsAppButton phoneNumber={process.env.WHATSAPP_NUMBER || '+15550199999'} />
         </Providers>
       </body>
     </html>

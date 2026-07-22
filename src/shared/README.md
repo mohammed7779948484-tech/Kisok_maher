@@ -13,6 +13,9 @@ Lowest layer in the FSD architecture. Contains dumb UI primitives, generic utili
 
 ```
 src/shared/
+├── config/                # Central design tokens and visible branding
+│   ├── design-system.ts   # Colors, type, spacing, radii, elevation, sizing, motion, breakpoints
+│   └── brand.config.ts    # kisok name and description
 ├── ui/                    # shadcn/ui primitives + custom UI components
 │   ├── button.tsx         # Button variants (shadcn/ui)
 │   ├── checkbox.tsx       # Checkbox (shadcn/ui)
@@ -38,7 +41,21 @@ src/shared/
 | `Checkbox` | `ui/checkbox` | shadcn/ui checkbox |
 | `Label` | `ui/label` | shadcn/ui form label |
 | `Breadcrumb` | `ui/breadcrumb` | Generic breadcrumb navigation with chevron separators |
+| `BrandLogo`, `BrandIcon` | `ui/brand` | Canonical full and compact kisok branding |
+| `Card` | `ui/card` | Tokenized surface container |
+| `StatusBadge` | `ui/status-badge` | Semantic success, warning, information, destructive, and neutral states |
+| `EmptyState` | `ui/empty-state` | Consistent empty/error explanation pattern |
+| `PageHeader` | `ui/page-header` | Customer page heading and description pattern |
+| `Skeleton` | `ui/skeleton` | Shared loading placeholder |
 | `cn()` | `lib/cn` | Class name merge utility (clsx + tailwind-merge) |
+
+## Design-system source of truth
+
+- Edit canonical values only in `config/design-system.ts`; Tailwind imports this registry and emits the CSS custom properties used by customer components.
+- Edit visible application naming only in `config/brand.config.ts`.
+- Use semantic utilities such as `bg-surface`, `text-on-surface`, `border-outline-variant`, `bg-success-container`, and `ring-focus-ring` instead of palette or arbitrary values.
+- Responsive customer layouts use `compact`, `medium`, and `expanded` screens.
+- The vector `BrandIcon` is the centralized kisok mark and can be replaced without changing consumers.
 
 ## Rules
 

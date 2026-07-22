@@ -1,88 +1,66 @@
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { staggerContainer, fadeUp } from '@/shared/ui/motion/variants'
+import { usePathname } from 'next/navigation'
 
 import { CartButton } from '@/features/cart/ui/CartButton'
 import { CartDrawer } from '@/features/cart/ui/CartDrawer'
-import { MobileNav } from './MobileNav'
 import type { CartItemData } from '@/features/cart/types'
+import { BrandLogo } from '@/shared/ui'
+import { brandConfig } from '@/shared/config'
+
+import { MobileNav } from './MobileNav'
 
 interface HeaderUIProps {
-    cartItemCount: number
-    cartItems: CartItemData[]
+  cartItemCount: number
+  cartItems: CartItemData[]
 }
 
-export function HeaderUI({ cartItemCount, cartItems }: HeaderUIProps) {
-    return (
-        <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg">
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-                {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 outline-none group">
-                    <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                        <img src="/logo.png" alt="Dragon Logo" className="h-10 w-auto object-contain drop-shadow-sm" />
-                    </div>
-                    <span className="text-lg font-bold text-foreground transition-colors group-hover:text-primary">
-                        Dragon
-                    </span>
-                </Link>
+const NAV_LINKS = [
+  { href: '/products', label: 'Products' },
+  { href: '/brands', label: 'Brands' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/track-order', label: 'Track Order' },
+] as const
 
-                {/* Navigation */}
-                <motion.nav
-                    variants={staggerContainer}
-                    initial="hidden"
-                    animate="show"
-                    className="hidden items-center gap-6 md:flex"
-                >
-                    <motion.div variants={fadeUp}>
-                        <Link
-                            href="/products"
-                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md px-2 py-1"
-                        >
-                            Products
-                        </Link>
-                    </motion.div>
-                    <motion.div variants={fadeUp}>
-                        <Link
-                            href="/brands"
-                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md px-2 py-1"
-                        >
-                            Brands
-                        </Link>
-                    </motion.div>
-                    <motion.div variants={fadeUp}>
-                        <Link
-                            href="/categories"
-                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md px-2 py-1"
-                        >
-                            Categories
-                        </Link>
-                    </motion.div>
-                    <div className="hidden md:block h-4 w-px bg-border/50 mx-1"></div>
-                    <motion.div variants={fadeUp}>
-                        <Link
-                            href="/track-order"
-                            className="text-sm font-semibold text-primary/80 transition-colors hover:text-primary outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md px-2 py-1 flex items-center gap-1"
-                        >
-                            Track Order
-                        </Link>
-                    </motion.div>
-                </motion.nav>
+export function HeaderUI({ cartItemCount, cartItems }: HeaderUIProps): React.ReactElement {
+  const pathname = usePathname()
 
-                {/* Right section: Cart + Mobile menu */}
-                <div className="flex items-center gap-2">
-                    {/* Cart button */}
-                    <CartButton itemCount={cartItemCount} />
+  return (
+    <header className="sticky top-0 z-40 border-b border-outline-variant/80 bg-surface/90 shadow-elevation-1 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-content items-center justify-between px-4 medium:px-6 expanded:px-8">
+        <Link
+          aria-label={`${brandConfig.displayName} home`}
+          className="inline-flex min-h-touch items-center rounded-medium px-1 transition-colors duration-fast hover:bg-surface-container"
+          href="/"
+        >
+          <BrandLogo iconClassName="h-9 w-9" />
+        </Link>
 
-                    {/* Mobile menu button */}
-                    <MobileNav />
-                </div>
-            </div>
+        <nav aria-label="Primary navigation" className="hidden items-center gap-1 medium:flex">
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
 
-            {/* CartDrawer (renders Portal via Sheet) */}
-            <CartDrawer items={cartItems} />
-        </header >
-    )
+            return (
+              <Link
+                aria-current={isActive ? 'page' : undefined}
+                className={`premium-interactive inline-flex min-h-touch items-center rounded-medium px-4 text-label-large ${isActive ? 'bg-primary-container text-primary-container-foreground shadow-elevation-1' : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'}`}
+                href={link.href}
+                key={link.href}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <CartButton itemCount={cartItemCount} />
+          <MobileNav />
+        </div>
+      </div>
+
+      <CartDrawer items={cartItems} />
+    </header>
+  )
 }

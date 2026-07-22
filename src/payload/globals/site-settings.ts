@@ -53,7 +53,7 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'store_name',
       type: 'text',
-      defaultValue: 'Dragon',
+      defaultValue: 'kisok',
       admin: {
         description: 'Store display name',
       },

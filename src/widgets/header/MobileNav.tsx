@@ -1,78 +1,55 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/shared/ui/sheet'
+import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 
+import { BrandLogo, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui'
+
+const NAV_LINKS = [
+  { href: '/', label: 'Home' },
+  { href: '/products', label: 'Products' },
+  { href: '/brands', label: 'Brands' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/track-order', label: 'Track Order' },
+] as const
+
 export function MobileNav(): React.ReactElement {
-    const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
 
-    return (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-                <button
-                    type="button"
-                    className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] border border-border md:hidden text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    aria-label="Open menu"
-                >
-                    <Menu className="h-5 w-5" />
-                </button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex w-full flex-col sm:max-w-md bg-background/95 backdrop-blur-xl border-r border-border/50">
-                <SheetHeader className="mb-6">
-                    <SheetTitle className="text-left text-xl font-bold flex items-center gap-2">
-                        <div className="flex items-center justify-center">
-                            <img src="/logo.png" alt="Dragon Logo" className="h-10 w-auto object-contain drop-shadow-sm" />
-                        </div>
-                        Dragon
-                    </SheetTitle>
-                </SheetHeader>
+  return (
+    <Sheet onOpenChange={setIsOpen} open={isOpen}>
+      <SheetTrigger asChild>
+        <button
+          aria-label="Open menu"
+          className="flex h-icon-button w-icon-button items-center justify-center rounded-medium border border-outline text-on-surface-variant transition-colors duration-fast hover:bg-surface-container hover:text-on-surface medium:hidden"
+          type="button"
+        >
+          <Menu aria-hidden="true" className="h-5 w-5" />
+        </button>
+      </SheetTrigger>
+      <SheetContent className="flex flex-col" side="left">
+        <SheetHeader className="mb-6">
+          <SheetTitle><BrandLogo /></SheetTitle>
+          <SheetDescription>Browse the in-store catalog or track an order.</SheetDescription>
+        </SheetHeader>
 
-                <nav className="flex flex-col gap-4">
-                    <Link
-                        href="/"
-                        onClick={() => setIsOpen(false)}
-                        className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-border/50"
-                    >
-                        Home
-                    </Link>
-                    <Link
-                        href="/products"
-                        onClick={() => setIsOpen(false)}
-                        className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-border/50"
-                    >
-                        Products
-                    </Link>
-                    <Link
-                        href="/brands"
-                        onClick={() => setIsOpen(false)}
-                        className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-border/50"
-                    >
-                        Brands
-                    </Link>
-                    <Link
-                        href="/categories"
-                        onClick={() => setIsOpen(false)}
-                        className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2 border-b border-border/50"
-                    >
-                        Categories
-                    </Link>
-                    <Link
-                        href="/track-order"
-                        onClick={() => setIsOpen(false)}
-                        className="text-lg font-bold text-primary hover:text-primary/80 transition-colors py-2 border-b border-border/50"
-                    >
-                        Track Order
-                    </Link>
-                </nav>
-            </SheetContent>
-        </Sheet>
-    )
+        <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+          {NAV_LINKS.map((link) => (
+            <Link
+              aria-current={pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`)) ? 'page' : undefined}
+              className={`premium-interactive flex min-h-touch items-center rounded-medium px-4 text-title-small ${pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`)) ? 'bg-primary-container text-primary-container-foreground shadow-elevation-1' : 'text-on-surface hover:bg-surface-container'}`}
+              href={link.href}
+              key={link.href}
+              onClick={() => setIsOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </SheetContent>
+    </Sheet>
+  )
 }

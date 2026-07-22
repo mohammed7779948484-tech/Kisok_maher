@@ -1,75 +1,50 @@
-/**
- * Storefront Home Page
- *
- * Displays featured brands, categories, and products.
- * Page composes features and widgets only — no inline UI.
- * @see Constitution: Pages are pure composers
- */
-
-import { getActiveProducts, getActiveBrands, getActiveCategories, BrandGrid, CategoryGrid } from '@/features/products'
+import { BrandGrid, CategoryGrid, getActiveBrands, getActiveCategories, getActiveProducts } from '@/features/products'
 import { HeroSection } from '@/widgets/hero'
 import { ProductGrid } from '@/widgets/product-grid'
 import { TrackOrderSection } from '@/widgets/track-order-section'
 
-export const revalidate = 60 // ISR: revalidate every 60 seconds
+export const revalidate = 60
 
 export default async function HomePage(): Promise<React.ReactElement> {
-    const [products, brands, categories] = await Promise.all([
-        getActiveProducts({ page: 1, limit: 8 }),
-        getActiveBrands(),
-        getActiveCategories(),
-    ])
+  const [products, brands, categories] = await Promise.all([
+    getActiveProducts({ page: 1, limit: 8 }),
+    getActiveBrands(),
+    getActiveCategories(),
+  ])
 
-    return (
-        <div className="mx-auto max-w-7xl px-4 py-8 lg:py-12">
-            {/* Hero */}
-            <HeroSection />
+  return (
+    <div className="customer-shell">
+      <HeroSection />
 
-            {/* Brands Section */}
-            {brands.length > 0 && (
-                <section className="mb-20">
-                    <div className="mb-8 flex flex-col items-center justify-center text-center space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                            Curated Brands
-                        </h2>
-                        <p className="text-muted-foreground text-sm max-w-lg">
-                            Explore our selection from the world&apos;s most distinguished vape manufacturers.
-                        </p>
-                    </div>
-                    <BrandGrid brands={brands} />
-                </section>
-            )}
+      {brands.length > 0 && (
+        <section aria-labelledby="brands-heading" className="customer-section">
+          <div className="mb-8 text-center">
+            <h2 className="text-headline-medium text-on-surface" id="brands-heading">Curated brands</h2>
+            <p className="mx-auto mt-2 max-w-xl text-body-medium text-on-surface-variant">Explore the brands available in store today.</p>
+          </div>
+          <BrandGrid brands={brands} />
+        </section>
+      )}
 
-            {/* Categories Section */}
-            {categories.length > 0 && (
-                <section className="mb-20">
-                    <div className="mb-8 flex flex-col items-center justify-center text-center space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                            Shop by Category
-                        </h2>
-                        <p className="text-muted-foreground text-sm max-w-lg">
-                            Find exactly what you&apos;re looking for, from premium hardware to exquisite juices.
-                        </p>
-                    </div>
-                    <CategoryGrid categories={categories} />
-                </section>
-            )}
+      {categories.length > 0 && (
+        <section aria-labelledby="categories-heading" className="customer-section">
+          <div className="mb-8 text-center">
+            <h2 className="text-headline-medium text-on-surface" id="categories-heading">Shop by category</h2>
+            <p className="mx-auto mt-2 max-w-xl text-body-medium text-on-surface-variant">Move quickly from category to brand and available products.</p>
+          </div>
+          <CategoryGrid categories={categories} />
+        </section>
+      )}
 
-            {/* Products Section */}
-            <section className="mb-20">
-                <div className="mb-8 flex flex-col items-center justify-center text-center space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                        Latest Arrivals
-                    </h2>
-                    <p className="text-muted-foreground text-sm max-w-lg">
-                        The newest additions to our carefully curated collection.
-                    </p>
-                </div>
-                <ProductGrid products={products.docs} emptyMessage="No products yet. Check back soon!" />
-            </section>
-
-            {/* Track Order Section */}
-            <TrackOrderSection />
+      <section aria-labelledby="products-heading" className="customer-section scroll-mt-24" id="products">
+        <div className="mb-8 text-center">
+          <h2 className="text-headline-medium text-on-surface" id="products-heading">Latest arrivals</h2>
+          <p className="mx-auto mt-2 max-w-xl text-body-medium text-on-surface-variant">Browse the newest additions to the in-store catalog.</p>
         </div>
-    )
+        <ProductGrid emptyMessage="No products yet. Check back soon!" products={products.docs} />
+      </section>
+
+      <TrackOrderSection />
+    </div>
+  )
 }

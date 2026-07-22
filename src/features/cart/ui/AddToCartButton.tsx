@@ -37,7 +37,7 @@ export function AddToCartButton({
 
     if (stockQuantity === 0) {
         return (
-            <Button disabled className="w-full bg-muted text-muted-foreground">
+            <Button className="w-full" disabled variant="secondary">
                 Out of Stock
             </Button>
         )
@@ -47,17 +47,17 @@ export function AddToCartButton({
         <Button
             onClick={handleAddToCart}
             disabled={isLoading}
-            className="w-full shadow-md transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+            className="w-full"
             size="lg"
         >
             {isLoading ? (
                 <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 aria-hidden="true" className="animate-spin" />
                     Adding...
                 </>
             ) : (
                 <>
-                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    <ShoppingCart aria-hidden="true" />
                     Add to Cart
                 </>
             )}

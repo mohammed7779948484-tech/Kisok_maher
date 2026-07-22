@@ -1,77 +1,63 @@
-/**
- * Centralized Framer Motion Variants Library
- * 
- * Defines standard animation states to enforce a uniform, luxurious
- * feel across the application while respecting accessibility constraints.
- * 
- * @see ui-ux-pro-max: "Use 150-300ms for micro-interactions"
- * @see ui-ux-pro-max: "Check prefers-reduced-motion" (handled via variants)
- */
+import { designSystem } from '@/shared/config'
 
-export const easeLux = [0.25, 1, 0.5, 1]; // Smooth, frictionless deceleration
+const duration = (value: string): number => Number.parseInt(value, 10) / 1000
+
+export const easeStandard = [0.2, 0, 0, 1] as const
 
 export const staggerContainer = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.05,
-        },
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: duration(designSystem.motion.fast),
     },
-};
+  },
+}
 
 export const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    show: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.4,
-            ease: easeLux,
-        },
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: duration(designSystem.motion.standard),
+      ease: easeStandard,
     },
-};
+  },
+}
 
 export const scaleTap = {
-    hover: { scale: 1.02, transition: { duration: 0.2, ease: easeLux } },
-    tap: { scale: 0.95, transition: { duration: 0.1, ease: easeLux } },
-};
+  hover: { scale: 1.01, transition: { duration: duration(designSystem.motion.fast), ease: easeStandard } },
+  tap: { scale: 0.98, transition: { duration: duration(designSystem.motion.fast), ease: easeStandard } },
+}
 
 export const glowHover = {
-    rest: {
-        scale: 1,
-        boxShadow: "0px 0px 0px 0px hsl(var(--primary) / 0)",
-        borderColor: "hsl(var(--border))",
+  rest: { scale: 1 },
+  hover: {
+    scale: 1.01,
+    transition: {
+      duration: duration(designSystem.motion.standard),
+      ease: easeStandard,
     },
-    hover: {
-        scale: 1.01,
-        boxShadow: "0px 4px 20px -2px hsl(var(--primary) / 0.15)",
-        borderColor: "hsl(var(--primary) / 0.5)",
-        transition: {
-            duration: 0.3,
-            ease: easeLux,
-        },
-    },
-};
+  },
+}
 
 export const slideInRight = {
-    hidden: { x: "100%", opacity: 0 },
-    show: {
-        x: 0,
-        opacity: 1,
-        transition: {
-            type: "spring",
-            stiffness: 300,
-            damping: 30,
-        },
+  hidden: { x: '100%', opacity: 0 },
+  show: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: duration(designSystem.motion.emphasized),
+      ease: easeStandard,
     },
-    exit: {
-        x: "100%",
-        opacity: 0,
-        transition: {
-            duration: 0.2,
-            ease: easeLux,
-        },
-    }
-};
+  },
+  exit: {
+    x: '100%',
+    opacity: 0,
+    transition: {
+      duration: duration(designSystem.motion.standard),
+      ease: easeStandard,
+    },
+  },
+}

@@ -112,7 +112,7 @@ export default buildConfig({
             overrideAccess: true,
             data: {
               gate_password: hashedPassword,
-              store_name: 'Dragon',
+              store_name: 'kisok',
               whatsapp_number: process.env.WHATSAPP_NUMBER || '+15550199999',
               order_prefix: 'VX',
             },

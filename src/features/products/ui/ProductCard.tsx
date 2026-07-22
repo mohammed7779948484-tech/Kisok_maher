@@ -1,76 +1,43 @@
-/**
- * ProductCard Component
- *
- * Displays a product card in the storefront grid.
- * Infused with Framer Motion for luxurious hover glowing states.
- */
-'use client'
-
 import Link from 'next/link'
-import { CloudinaryImage } from '@/shared/ui/CloudinaryImage'
-import { motion } from 'framer-motion'
-import { glowHover } from '@/shared/ui/motion/variants'
-import { PLACEHOLDER_IMAGE } from '../constants'
+import { Layers3 } from 'lucide-react'
 
+import { CloudinaryImage, StatusBadge } from '@/shared/ui'
+
+import { PLACEHOLDER_IMAGE } from '../constants'
 import type { ProductCardProps } from '../types'
 
-// Wrap Next Link with motion for animation
-const MotionLink = motion.create(Link)
-
 export function ProductCard({ product }: ProductCardProps): React.ReactElement {
-    const { name, slug, imageUrl, brandName, variantCount, inStock } = product
+  const { name, slug, imageUrl, brandName, variantCount, inStock } = product
 
-    return (
-        <MotionLink
-            href={`/products/${slug}`}
-            variants={glowHover}
-            initial="rest"
-            whileHover="hover"
-            className="group block overflow-hidden rounded-[var(--radius-xl)] border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm hover:border-primary/50 transition-all outline-none"
-        >
-            {/* Image */}
-            <div className="relative aspect-square overflow-hidden bg-card/20 pb-0">
-                <CloudinaryImage
-                    src={imageUrl || PLACEHOLDER_IMAGE}
-                    publicId={product.cloudinaryPublicId}
-                    alt={name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {/* Variant Count Badge */}
-                {variantCount > 1 && (
-                    <span className="absolute right-2 top-2 rounded-full bg-background/80 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm shadow-sm border border-border/50">
-                        {variantCount} Flavors
-                    </span>
-                )}
-                {!inStock && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/70 backdrop-blur-[2px]">
-                        <span className="rounded-full bg-destructive/90 px-3 py-1 text-xs font-semibold text-destructive-foreground shadow-sm">
-                            Out of Stock
-                        </span>
-                    </div>
-                )}
-            </div>
+  return (
+    <Link
+      className="premium-interactive group block h-full overflow-hidden rounded-large border border-outline-variant bg-surface shadow-elevation-1 hover:border-primary/50 hover:shadow-elevation-3"
+      href={`/products/${slug}`}
+    >
+      <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
+        <CloudinaryImage
+          alt={name}
+          className="object-cover transition-transform duration-emphasized ease-emphasized group-hover:scale-[1.035] motion-reduce:transform-none"
+          fill
+          publicId={product.cloudinaryPublicId}
+          sizes="(max-width: 719px) 100vw, (max-width: 1099px) 50vw, 25vw"
+          src={imageUrl || PLACEHOLDER_IMAGE}
+        />
+        <div className="absolute left-3 top-3">
+          <StatusBadge tone={inStock ? 'success' : 'destructive'}>
+            {inStock ? 'Available' : 'Out of stock'}
+          </StatusBadge>
+        </div>
+      </div>
 
-            {/* Details */}
-            <div className="p-4">
-                {brandName && (
-                    <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {brandName}
-                    </p>
-                )}
-                <h3 className="mb-2 text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
-                    {name}
-                </h3>
-                <div className="flex items-center justify-between">
-                    {variantCount > 1 && (
-                        <span className="text-xs text-muted-foreground animate-pulse">
-                            {variantCount} options
-                        </span>
-                    )}
-                </div>
-            </div>
-        </MotionLink>
-    )
+      <div className="p-4">
+        {brandName && <p className="mb-1 text-label-small uppercase tracking-wider text-on-surface-variant">{brandName}</p>}
+        <h3 className="break-words text-title-small text-on-surface transition-colors duration-fast group-hover:text-primary">{name}</h3>
+        <p className="mt-3 flex items-center gap-2 text-body-small text-on-surface-variant">
+          <Layers3 aria-hidden="true" className="h-4 w-4" />
+          {variantCount} {variantCount === 1 ? 'flavor' : 'flavors'}
+        </p>
+      </div>
+    </Link>
+  )
 }

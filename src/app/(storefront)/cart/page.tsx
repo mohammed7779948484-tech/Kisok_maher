@@ -18,9 +18,11 @@ import {
     getCartItems,
     CartPageContent,
 } from '@/features/cart'
+import { brandConfig } from '@/shared/config'
+import { PageHeader } from '@/shared/ui'
 
 export const metadata: Metadata = {
-    title: 'Shopping Cart — Dragon',
+    title: `Shopping Cart — ${brandConfig.displayName}`,
     description: 'Review items in your shopping cart',
 }
 
@@ -36,10 +38,8 @@ export default async function CartPage(): Promise<React.ReactElement> {
     const items = await getCartItems(cart.id)
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-8">
-            <h1 className="mb-6 text-2xl font-bold text-foreground">
-                Shopping Cart
-            </h1>
+        <div className="customer-shell max-w-6xl">
+            <PageHeader description="Review quantities and confirm the order when everything is ready." eyebrow="Current order" title="Shopping cart" />
             <CartPageContent items={items} />
         </div>
     )

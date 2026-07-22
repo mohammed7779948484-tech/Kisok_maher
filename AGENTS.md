@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Dragon Store
+﻿# AGENTS.md — kisok Store
 
 Guidance for AI coding agents working in this repository. Read this before editing.
 It is intentionally concise; the authoritative deep rulebook is
@@ -7,7 +7,7 @@ and adds rules that supersede outdated documentation.
 
 ## 1. Project Overview
 
-**Dragon** is a private, single-tenant e-commerce store for vape/tobacco products,
+**kisok** is a private, single-tenant e-commerce store for vape/tobacco products,
 protected by a site-wide shared password (no user accounts — session-based auth only).
 It is being adapted to run as an **in-store kiosk on a tablet**: browse → pick a
 variant/flavor → add to cart → confirm the order directly from the cart → reveal an

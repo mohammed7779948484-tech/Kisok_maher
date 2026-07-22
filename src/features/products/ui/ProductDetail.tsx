@@ -18,7 +18,7 @@ export function ProductDetail({ product, ActionComponent }: ProductDetailWithAct
     const { name, imageUrl, brandName, description, unitLabel, variants, totalStock, cloudinaryPublicId } = product
 
     return (
-        <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="py-4 medium:py-6">
             <ProductInteractive
                 variants={variants}
                 totalStock={totalStock}

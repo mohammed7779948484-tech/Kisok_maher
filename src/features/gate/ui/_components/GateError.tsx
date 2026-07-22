@@ -14,7 +14,7 @@ export function GateError({ message }: GateErrorProps): React.ReactElement {
         <div
             role="alert"
             aria-live="assertive"
-            className="rounded-[var(--radius-lg)] border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+            className="rounded-medium border border-destructive/20 bg-destructive-container p-4 text-body-medium text-destructive-container-foreground"
         >
             <p className="flex items-center gap-2">
                 <svg

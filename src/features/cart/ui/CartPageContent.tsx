@@ -17,18 +17,19 @@ export function CartPageContent({ items }: CartPageContentProps): React.ReactEle
         .join('|')
 
     return (
-        <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-3 lg:col-span-2">
+        <div className="grid gap-6 expanded:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
+            <div className="space-y-3">
                 {items.map((item) => <CartItem key={item.id} item={item} />)}
             </div>
-            <div className="rounded-lg border border-border p-4">
-                <h2 className="mb-3 text-lg font-semibold text-foreground">Order Summary</h2>
+            <aside className="h-fit rounded-large border border-outline-variant bg-surface p-5 shadow-elevation-1 expanded:sticky expanded:top-24">
+                <h2 className="mb-3 text-title-medium text-on-surface">Order summary</h2>
                 <CartSummary
                     itemCount={items.reduce((sum, item) => sum + item.quantity, 0)}
                     cartFingerprint={fingerprint}
                     hasInactiveItems={hasInactiveItems}
+                    showCartLink={false}
                 />
-            </div>
+            </aside>
         </div>
     )
 }

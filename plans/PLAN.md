@@ -1,4 +1,4 @@
-# Dragon Store Kiosk — Simplified Release Plan (v5)
+# kisok Store — Simplified Release Plan (v5)
 
 > Updated: 2026-07-21  
 > Target: a single store tablet, used by one customer at a time  

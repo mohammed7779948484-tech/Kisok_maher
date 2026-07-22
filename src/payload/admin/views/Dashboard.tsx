@@ -42,7 +42,7 @@ export async function Dashboard(props: AdminViewServerProps): Promise<React.Reac
         <main className="dragon-admin">
           <header className="dragon-page-header">
             <div>
-              <p className="dragon-muted mb-1 text-sm font-medium">Dragon operations</p>
+              <p className="dragon-muted mb-1 text-sm font-medium">kisok operations</p>
               <h1 className="dragon-page-title">Store overview</h1>
               <p className="dragon-page-description mt-2">
                 Orders, catalog health, and the inventory items that need attention today.

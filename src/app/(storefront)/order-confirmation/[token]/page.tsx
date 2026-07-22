@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { getOrderByConfirmationToken } from '@/features/checkout'
-import { OrderConfirmation } from '@/features/checkout/ui/OrderConfirmation'
+import { getOrderByConfirmationToken, OrderConfirmation } from '@/features/checkout'
+import { brandConfig } from '@/shared/config'
 
 export const metadata: Metadata = {
-    title: 'Order Confirmed — Dragon',
+    title: `Order Confirmed — ${brandConfig.displayName}`,
     description: 'Your kiosk order was placed successfully',
 }
 
@@ -21,7 +21,7 @@ export default async function OrderConfirmationPage({ params }: Props): Promise<
     if (!order) notFound()
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-12">
+        <div className="customer-shell max-w-3xl py-12">
             <OrderConfirmation order={order} />
         </div>
     )

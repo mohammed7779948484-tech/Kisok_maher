@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation'
 import { getProductBySlug, ProductDetail } from '@/features/products'
 import { AddToCartButton } from '@/features/cart'
 import { Breadcrumb } from '@/shared/ui/breadcrumb'
+import { brandConfig } from '@/shared/config'
 
 import type { Metadata } from 'next'
 
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     if (!product) return { title: 'Product Not Found' }
 
     return {
-        title: `${product.name} — Dragon`,
+        title: `${product.name} — ${brandConfig.displayName}`,
         description: `${product.brandName ? `${product.brandName} — ` : ''}${product.name}. View available variants.`,
     }
 }
@@ -61,7 +62,7 @@ export default async function ProductPage({ params }: ProductPageProps): Promise
     crumbs.push({ label: product.name })
 
     return (
-        <div className="mx-auto max-w-6xl px-4 pt-4">
+        <div className="customer-shell max-w-6xl pt-4">
             <Breadcrumb items={crumbs} />
             <ProductDetail product={product} ActionComponent={AddToCartButton} />
         </div>

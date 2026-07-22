@@ -1,13 +1,21 @@
 'use client'
 
-import Image from 'next/image'
 import React from 'react'
+import { usePathname } from 'next/navigation'
 
-export function Logo(): React.ReactElement {
+import { BrandIcon } from '@/shared/ui'
+
+export function Logo(): React.ReactElement | null {
+  const pathname = usePathname()
+
+  if (pathname === '/admin/login' || pathname.startsWith('/admin/login/')) {
+    return null
+  }
+
   return (
     <div className="flex items-center gap-3 py-2">
-      <Image alt="Dragon" className="h-9 w-9 rounded-md object-contain drop-shadow-sm" height={36} src="/logo.png" width={36} />
-      <span className="text-xl font-semibold tracking-tight">Dragon</span>
+      <BrandIcon className="h-9 w-9 text-primary" title="kisok" />
+      <span className="text-xl font-semibold tracking-tight">kisok</span>
     </div>
   )
 }
