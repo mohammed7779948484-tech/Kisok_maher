@@ -1,214 +1,136 @@
-'use client'
-
+import { Gutter, Link } from '@payloadcms/ui'
+import {
+  AlertTriangle,
+  Boxes,
+  ClipboardList,
+  Layers3,
+  PackagePlus,
+  Settings,
+  ShoppingBag,
+} from 'lucide-react'
+import type { AdminViewServerProps } from 'payload'
 import React from 'react'
-import Link from 'next/link'
 
-/**
- * Custom Admin Dashboard Component
- *
- * Extends the default Payload admin dashboard with custom widgets
- * and quick actions for vape store management.
- *
- * Note: Payload Admin views run inside Payload's own React tree.
- * We use a scoped <style> tag to avoid inline styles (Constitution compliance)
- * while keeping styles self-contained within the admin frame.
- */
+import { StatusBadge } from '../components/shared/StatusBadge'
+import { getCollectionCRUDPermissions, getGlobalPermissions } from '../lib/permissions'
+import { getDashboardData } from '../queries/dashboard'
 
-const dashboardStyles = `
-  .vx-dashboard {
-    padding: 32px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+function formatDate(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? 'Unknown time'
+    : new Intl.DateTimeFormat('en', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date)
+}
 
-  .vx-dashboard__title {
-    font-size: 28px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #ffffff;
-  }
+export async function Dashboard(props: AdminViewServerProps): Promise<React.ReactElement> {
+  const { initPageResult } = props
+  const permissions = initPageResult.permissions
+  const orders = getCollectionCRUDPermissions(permissions, 'orders')
+  const products = getCollectionCRUDPermissions(permissions, 'products')
+  const variants = getCollectionCRUDPermissions(permissions, 'product_variants')
+  const brands = getCollectionCRUDPermissions(permissions, 'brands')
+  const categories = getCollectionCRUDPermissions(permissions, 'categories')
+  const media = getCollectionCRUDPermissions(permissions, 'media')
+  const siteSettings = getGlobalPermissions(permissions, 'site-settings')
+  const data = await getDashboardData(initPageResult.req)
 
-  .vx-dashboard__subtitle {
-    font-size: 16px;
-    color: #a1a1aa;
-    margin-bottom: 32px;
-  }
-
-  .vx-dashboard__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
-  }
-
-  .vx-card {
-    background: #18181b;
-    border: 1px solid #27272a;
-    border-radius: 12px;
-    padding: 24px;
-    transition: border-color 0.2s ease;
-  }
-
-  .vx-card:hover {
-    border-color: #3f3f46;
-  }
-
-  .vx-card__header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  .vx-card__icon {
-    font-size: 24px;
-  }
-
-  .vx-card__label {
-    font-size: 14px;
-    color: #a1a1aa;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .vx-card__value {
-    font-size: 32px;
-    font-weight: 700;
-    color: #ffffff;
-  }
-
-  .vx-card__value--accent {
-    color: #f8b97e;
-  }
-
-  .vx-card__description {
-    font-size: 14px;
-    color: #71717a;
-    margin-top: 8px;
-  }
-
-  .vx-actions {
-    background: #18181b;
-    border: 1px solid #27272a;
-    border-radius: 12px;
-    padding: 24px;
-  }
-
-  .vx-actions__title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    color: #ffffff;
-  }
-
-  .vx-actions__list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .vx-actions__btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 12px 20px;
-    color: #ffffff;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: opacity 0.2s ease;
-  }
-
-  .vx-actions__btn:hover {
-    opacity: 0.85;
-  }
-
-  .vx-actions__btn--primary {
-    background: #657f66;
-  }
-
-  .vx-actions__btn--secondary {
-    background: #27272a;
-  }
-`
-
-export const Dashboard: React.FC = () => {
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: dashboardStyles }} />
-      <div className="vx-dashboard">
-        <h1 className="vx-dashboard__title">Welcome to Dragon Admin</h1>
-        <p className="vx-dashboard__subtitle">
-          Manage your products, orders, and store settings from this dashboard.
-        </p>
-
-        {/* Quick Stats Grid */}
-        <div className="vx-dashboard__grid">
-          {/* New Orders Card */}
-          <div className="vx-card">
-            <div className="vx-card__header">
-              <span className="vx-card__icon">🛒</span>
-              <span className="vx-card__label">New Orders</span>
+      <Gutter>
+        <main className="dragon-admin">
+          <header className="dragon-page-header">
+            <div>
+              <p className="dragon-muted mb-1 text-sm font-medium">Dragon operations</p>
+              <h1 className="dragon-page-title">Store overview</h1>
+              <p className="dragon-page-description mt-2">
+                Orders, catalog health, and the inventory items that need attention today.
+              </p>
             </div>
-            <div className="vx-card__value">View Orders</div>
-            <p className="vx-card__description">
-              Check pending and processing orders
-            </p>
+            {products.create ? <Link className="dragon-button dragon-button--primary" href="/admin/collections/products/create">
+              <PackagePlus aria-hidden="true" size={18} />
+              New product
+            </Link> : null}
+          </header>
+
+          <section aria-label="Store metrics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {data.metrics.map((metric, index) => (
+              <article className="dragon-card" key={metric.label}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <p className="dragon-muted m-0 text-sm font-medium">{metric.label}</p>
+                  {index < 3 ? <ShoppingBag aria-hidden="true" size={18} /> : <Boxes aria-hidden="true" size={18} />}
+                </div>
+                <p className="m-0 text-3xl font-semibold tabular-nums">{metric.value}</p>
+                <p className="dragon-muted mb-0 mt-2 text-xs">{metric.description}</p>
+              </article>
+            ))}
+          </section>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)]">
+            {orders.read ? <section className="dragon-card p-0" aria-labelledby="recent-orders-heading">
+              <div className="dragon-section-header">
+                <div>
+                  <h2 className="dragon-card-title" id="recent-orders-heading">Recent orders</h2>
+                  <p className="dragon-muted mb-0 mt-1 text-sm">Newest kiosk confirmations</p>
+                </div>
+                <Link className="dragon-button" href="/admin/collections/orders">View all</Link>
+              </div>
+              {data.recentOrders.length ? (
+                <div className="overflow-x-auto">
+                  <table className="dragon-table min-w-[560px]">
+                    <thead><tr><th>Order</th><th>Status</th><th>Items</th><th>Created</th></tr></thead>
+                    <tbody>
+                      {data.recentOrders.map((order) => (
+                        <tr className="dragon-row" key={String(order.id)}>
+                          <td><Link href={`/admin/collections/orders/${order.id}`}>#{order.orderNumber}</Link></td>
+                          <td><StatusBadge status={order.status} /></td>
+                          <td>{order.itemCount}</td>
+                          <td className="dragon-muted">{formatDate(order.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <div className="dragon-empty m-5"><ClipboardList aria-hidden="true" size={28} /><p className="m-0 font-medium">No orders yet</p></div>}
+            </section> : null}
+
+            {variants.read ? <section className="dragon-card" aria-labelledby="inventory-heading">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="dragon-card-title" id="inventory-heading">Inventory watch</h2>
+                  <p className="dragon-muted mb-0 mt-1 text-sm">Lowest active variant stock</p>
+                </div>
+                <AlertTriangle aria-hidden="true" size={20} />
+              </div>
+              {data.inventoryAlerts.length ? (
+                <ul className="m-0 grid list-none gap-3 p-0">
+                  {data.inventoryAlerts.map((item) => (
+                    <li className="flex items-center justify-between gap-4 rounded-lg border p-3" key={String(item.id)}>
+                      <div className="min-w-0">
+                        <p className="m-0 truncate font-medium">{item.productName}</p>
+                        <p className="dragon-muted mb-0 mt-1 truncate text-xs">{item.variantName}{item.sku ? ` · ${item.sku}` : ''}</p>
+                      </div>
+                      <StatusBadge label={`${item.stockQuantity} left`} status={item.stockQuantity === 0 ? 'out-of-stock' : 'low-stock'} />
+                    </li>
+                  ))}
+                </ul>
+              ) : <div className="dragon-empty min-h-40"><Boxes aria-hidden="true" size={26} /><p className="m-0 font-medium">No inventory alerts</p></div>}
+            </section> : null}
           </div>
 
-          {/* Products Card */}
-          <div className="vx-card">
-            <div className="vx-card__header">
-              <span className="vx-card__icon">📦</span>
-              <span className="vx-card__label">Products</span>
+          <section className="dragon-card" aria-labelledby="quick-actions-heading">
+            <h2 className="dragon-card-title" id="quick-actions-heading">Quick actions</h2>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {orders.read ? <Link className="dragon-button" href="/admin/collections/orders"><ClipboardList aria-hidden="true" size={17} />Orders</Link> : null}
+              {products.read ? <Link className="dragon-button" href="/admin/collections/products"><Boxes aria-hidden="true" size={17} />Products</Link> : null}
+              {brands.read || categories.read ? <Link className="dragon-button" href="/admin/catalog"><Layers3 aria-hidden="true" size={17} />Catalog</Link> : null}
+              {media.read ? <Link className="dragon-button" href="/admin/collections/media"><Boxes aria-hidden="true" size={17} />Media</Link> : null}
+              {siteSettings.read ? <Link className="dragon-button" href="/admin/globals/site-settings"><Settings aria-hidden="true" size={17} />Store settings</Link> : null}
             </div>
-            <div className="vx-card__value">Manage Products</div>
-            <p className="vx-card__description">
-              Add, edit, or remove products
-            </p>
-          </div>
-
-          {/* Low Stock Card */}
-          <div className="vx-card">
-            <div className="vx-card__header">
-              <span className="vx-card__icon">⚠️</span>
-              <span className="vx-card__label">Low Stock</span>
-            </div>
-            <div className="vx-card__value vx-card__value--accent">
-              Check Stock
-            </div>
-            <p className="vx-card__description">
-              Review low inventory items
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="vx-actions">
-          <h2 className="vx-actions__title">Quick Actions</h2>
-          <div className="vx-actions__list">
-            <Link
-              href="/admin/collections/products/create"
-              className="vx-actions__btn vx-actions__btn--primary"
-            >
-              + Create Product
-            </Link>
-            <Link
-              href="/admin/collections/orders"
-              className="vx-actions__btn vx-actions__btn--secondary"
-            >
-              📋 View Orders
-            </Link>
-            <Link
-              href="/admin/globals/site-settings"
-              className="vx-actions__btn vx-actions__btn--secondary"
-            >
-              ⚙️ Site Settings
-            </Link>
-          </div>
-        </div>
-      </div>
-    </>
+          </section>
+        </main>
+      </Gutter>
   )
 }
 

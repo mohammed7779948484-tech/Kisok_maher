@@ -24,7 +24,8 @@ export const Carts: CollectionConfig = {
     admin: {
         useAsTitle: 'session_id',
         defaultColumns: ['session_id', 'expires_at', 'createdAt'],
-        group: 'Commerce',
+        group: 'System',
+        hidden: true,
     },
     access: {
         read: ({ req: { user } }) => Boolean(user),
@@ -93,7 +94,8 @@ export const CartItems: CollectionConfig = {
     admin: {
         useAsTitle: 'id',
         defaultColumns: ['cart', 'variant', 'quantity'],
-        group: 'Commerce',
+        group: 'System',
+        hidden: true,
     },
     access: {
         read: ({ req: { user } }) => Boolean(user),

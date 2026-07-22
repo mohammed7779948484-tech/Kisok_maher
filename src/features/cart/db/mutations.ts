@@ -117,7 +117,7 @@ export async function addItemToCart(
     return payload.create({
         collection: 'cart_items',
         data: {
-            cart: cartId,
+            cart: Number(cartId),
             variant: variantId,
             quantity: Math.min(quantity, MAX_QUANTITY),
         },

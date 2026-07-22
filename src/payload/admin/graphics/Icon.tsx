@@ -1,24 +1,13 @@
-'use client'
-
 import React from 'react'
-
-const iconStyles = `
-  .vx-icon {
-    width: 32px;
-    height: 32px;
-  }
-`
 
 /**
  * Admin Panel Icon Component
  * Displayed in browser tab and admin navigation
  */
-export const Icon: React.FC = () => {
+export function Icon(): React.ReactElement {
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: iconStyles }} />
       <svg
-        className="vx-icon"
+        className="h-8 w-8"
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +26,6 @@ export const Icon: React.FC = () => {
           fill="none"
         />
       </svg>
-    </>
   )
 }
 

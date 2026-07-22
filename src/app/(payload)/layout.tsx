@@ -4,6 +4,7 @@ import type { ServerFunctionClient } from 'payload'
 
 import config from '@payload-config'
 import '@payloadcms/next/css'
+import '@/payload/admin/custom.scss'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 import { importMap } from './admin/importMap'
@@ -28,17 +29,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
     return (
         <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                  :root {
-                    --font-sans: ${inter.style.fontFamily};
-                    --font-body: ${inter.style.fontFamily};
-                  }
-                  body, .payload-default {
-                    font-family: var(--font-sans), system-ui, sans-serif !important;
-                  }
-                `
-            }} />
             <div className={inter.variable}>
                 {children}
             </div>

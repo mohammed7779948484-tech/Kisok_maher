@@ -16,7 +16,8 @@ export const ProductVariants: CollectionConfig = {
     admin: {
         useAsTitle: 'variant_name',
         defaultColumns: ['variant_name', 'product', 'sku', 'stock_quantity', 'is_active'],
-        group: 'Catalog',
+        group: 'System',
+        hidden: true,
         description: 'Product variations with individual pricing and stock',
     },
     access: {

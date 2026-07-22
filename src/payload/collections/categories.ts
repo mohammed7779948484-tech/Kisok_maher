@@ -18,7 +18,7 @@ export const Categories: CollectionConfig = {
     admin: {
         useAsTitle: 'name',
         defaultColumns: ['name', 'slug', 'parent', 'is_active', 'sort_order'],
-        group: 'Catalog',
+        hidden: true,
         description: 'Product categories (max 2 levels)',
     },
     access: {

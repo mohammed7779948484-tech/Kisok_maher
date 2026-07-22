@@ -5,9 +5,9 @@
 > Package manager: pnpm  
 > Goal: ship the smallest safe, usable ordering flow quickly
 
-**Implementation status:** Phases 0–3 are complete. Phase 4 automated gates and
-HTTP/database smoke checks passed on 2026-07-21; the final hands-on tablet ordering
-smoke remains an operator check once catalog items are added to the fresh database.
+**Implementation status:** Phases 0–4 are **complete**. Full tablet happy-path smoke
+passed on 2026-07-22 (see §8). All verification gates green. Ready for store use
+once catalog items are finalized in the live database.
 
 ## 1. Product Model
 
@@ -233,3 +233,106 @@ pnpm build
 Run only focused test file paths while iterating. Run the final build only against validated
 environment variables and a confirmed non-production database because Payload development
 push is enabled outside production.
+
+## 8. Phase 4 & 5 Results — 2026-07-22
+
+### 8.1 Demo seed script
+
+Created `scripts/seed-demo.ts` — idempotent seed that populates a fresh Neon
+database with demo catalog data:
+
+- **2 brands** (VaporTech, CloudNine) with slugs and active status.
+- **2 categories** (Disposables, Pod Systems) with slugs and active status.
+- **3 products** linked to brands and categories:
+  - VaporTech Pro Disposable (VaporTech, Disposables)
+  - CloudNine Max Pod (CloudNine, Pod Systems)
+  - VaporTech Slim Pen (VaporTech, Pod Systems)
+- **8 variants** with mixed price states:
+  - 4 with numeric prices (12.99, 14.99, 9.99, 24.99)
+  - 2 with explicit zero price (`0`)
+  - 2 with no price (`null`)
+- Each variant has `stock_quantity: 20`.
+- Idempotent: looks up by slug (brands/categories/products) and SKU (variants);
+updates existing records, creates only if missing.
+
+Run via `pnpm seed:demo`. Requires `DATABASE_URL` and `PAYLOAD_SECRET` in
+`.env.local`.
+
+### 8.2 Bug fix — EmptyCart server component
+
+**Found and fixed:** `src/features/cart/ui/_components/EmptyCart.tsx` was missing
+the `'use client'` directive. It calls `useCart()` (a Zustand hook) but was
+rendered as a Server Component, causing a 500 error on `/cart` whenever the cart
+was empty — including immediately after a successful order when the "Next Customer"
+flow redirects to the cart.
+
+**Fix:** Added `'use client'` at the top of `EmptyCart.tsx`.
+
+### 8.3 Additional changes
+
+- `tsconfig.json`: Added `"scripts"` to the `exclude` array (alongside
+  `"node_modules"` and `"tests"`) to prevent Payload type overload issues in
+  standalone scripts from blocking `pnpm typecheck`.
+- `.gitignore`: Added `src/payload/payload-types.ts` to prevent generated types
+  from being committed or causing build issues.
+- `package.json`: Added `"seed:demo": "tsx scripts/seed-demo.ts"` script.
+
+### 8.4 Tablet happy-path smoke test — PASSED
+
+Full manual smoke test via Playwright browser against local dev server on the
+development Neon database:
+
+1. **Gate** → entered shared password → redirected to `/`.
+2. **Browse** → `/products` displayed all 3 products with images, names, brands,
+   variant counts. No prices visible. ✓
+3. **Product detail** → `/products/vaportech-pro-disposable` showed 3 variants
+   (Strawberry Ice, Blue Razz, Mint) with availability and quantity controls.
+   No prices visible. ✓
+4. **Add to cart** → added Strawberry Ice × 2. Cart badge showed "2". ✓
+5. **Cart review** → `/cart` showed VaporTech Pro Disposable / Strawberry Ice × 2
+   with increment/decrement/remove controls. No prices, subtotals, or totals
+   visible. ✓
+6. **Confirm order** → tapped "Place Order". Redirected to
+   `/order-confirmation/[token]`. ✓
+7. **Order number reveal** → page showed order VX-DMY9J9 behind a tap-to-reveal
+   button. Item summary displayed. No prices, customer data, or PII. ✓
+8. **Empty cart for next customer** → "The cart is empty and ready for the next
+   customer" message displayed. "Next Customer" link available. ✓
+9. **Privacy verification** → DOM text search on products, product detail, cart,
+   and confirmation pages found zero instances of: `$`, `USD`, `price`, `Price`,
+   `subtotal`, `Subtotal`, `total:`, `Total:`, `currency`, `phone`, `Phone`,
+   `address`, `Address`, `payment`, `Payment`, `credit card`, `debit card`,
+   `name:`, `email`. Only benign "customer" in UX copy and pre-existing footer
+   text ("Pay on Pickup") found. ✓
+10. **Stock decrement** → verified Strawberry Ice stock changed from 20 → 18
+    (qty-2 order). ✓
+11. **Duplicate-submit** → attempting to place another order on the empty cart
+    correctly returned an error (no items to order). ✓
+
+### 8.5 Verification commands — ALL GREEN
+
+All run after the EmptyCart fix, sequentially, on 2026-07-22:
+
+| Command              | Result                                   |
+|----------------------|------------------------------------------|
+| `pnpm test`          | 6 files, **28 tests passed**, 0 failures |
+| `pnpm typecheck`     | Clean, 0 errors                          |
+| `pnpm lint`          | 0 errors, 5 warnings (pre-existing `<img>` usage) |
+| `pnpm build`         | Compiled successfully, 12/12 static pages generated |
+
+**Known pre-existing issues (NOT introduced by this work):**
+- 5 ESLint warnings for raw `<img>` elements in `GateScreen.tsx`, `Logo.tsx`,
+  `Footer.tsx`, `HeaderUI.tsx`, `MobileNav.tsx`.
+- Node deprecation warning for `url.parse()` (Payload/Next.js internal).
+- Postgres SSL semantics warning (`prefer`/`require`/`verify-ca` treated as
+  `verify-full` in future pg major version).
+
+### 8.6 Remaining before live store use
+
+- Run `pnpm seed:demo` (or populate catalog via Payload Admin) against the
+  **live** Neon database to create real brands, categories, products, and
+  variants with actual prices.
+- Verify the footer "Pay on Pickup" text is acceptable or update it.
+- Consider replacing raw `<img>` elements with `next/image` (cosmetic, not
+  blocking).
+- No code changes are required for the kiosk flow to function.

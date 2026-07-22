@@ -47,6 +47,7 @@ test-results/
 # Payload
 media/
 uploads/
+src/payload/payload-types.ts
 
 # Sentry
 .sentryclirc

@@ -109,7 +109,7 @@ export class StockService {
         })
 
         const variantsMap = new Map(
-            variantsResult.docs.map((doc) => [Number(doc.id), doc as Record<string, unknown>])
+            variantsResult.docs.map((doc) => [Number(doc.id), doc])
         )
 
         for (const item of items) {
@@ -123,7 +123,7 @@ export class StockService {
                 )
             }
 
-            const currentStock = (variant.stock_quantity as number) ?? 0
+            const currentStock = variant.stock_quantity
             const sufficient = currentStock >= item.quantity
 
             results.push({

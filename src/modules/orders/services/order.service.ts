@@ -126,7 +126,7 @@ export class OrderService {
             data: {
                 order_number: orderNumber,
                 session_id: input.sessionId,
-                cart: input.cartId,
+                cart: Number(input.cartId),
                 idempotency_key: input.idempotencyKey,
                 confirmation_token: input.confirmationToken,
                 confirmation_token_expires_at: input.confirmationTokenExpiresAt,

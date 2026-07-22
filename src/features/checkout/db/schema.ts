@@ -21,14 +21,21 @@ export const Orders: CollectionConfig = {
     admin: {
         useAsTitle: 'order_number',
         defaultColumns: ['order_number', 'status', 'createdAt'],
-        group: 'Commerce',
-        description: 'Customer orders with COD payment',
+        group: 'Store',
+        description: 'Kiosk orders confirmed in store; no online payment or customer checkout form',
+        components: {
+            views: {
+                list: {
+                    Component: '@/payload/admin/views/OrdersList#OrdersList',
+                },
+            },
+        },
     },
     access: {
         read: ({ req: { user } }) => Boolean(user),     // Locked down, storefront uses Local API
         create: ({ req: { user } }) => Boolean(user),   // Locked down
         update: ({ req: { user } }) => Boolean(user),   // Admin status updates
-        delete: ({ req: { user } }) => Boolean(user && (user as Record<string, unknown>).role === 'super-admin'),
+        delete: ({ req: { user } }) => user?.role === 'super-admin',
     },
     fields: [
         {
@@ -189,7 +196,8 @@ export const OrderItems: CollectionConfig = {
     slug: 'order_items',
     admin: {
         defaultColumns: ['order', 'product_name', 'variant_name', 'quantity'],
-        group: 'Commerce',
+        group: 'System',
+        hidden: true,
         description: 'Line items in orders (immutable snapshots)',
     },
     access: {

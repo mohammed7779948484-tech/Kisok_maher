@@ -17,7 +17,7 @@ export const Brands: CollectionConfig = {
     admin: {
         useAsTitle: 'name',
         defaultColumns: ['name', 'slug', 'is_active', 'sort_order'],
-        group: 'Catalog',
+        hidden: true,
         description: 'Product brands and manufacturers',
     },
     access: {

@@ -12,7 +12,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site Settings',
   admin: {
-    group: 'Configuration',
+    hidden: true,
     description: 'Global store configuration. Only Super Admin can modify.',
   },
   access: {

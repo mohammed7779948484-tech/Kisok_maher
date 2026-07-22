@@ -52,9 +52,10 @@ export const canDeleteUser: Access = async ({ req, id }) => {
   // Check if target user exists and is also a super admin
   // Optional: Prevent deleting other super admins
   try {
+    if (typeof id !== 'number') return false
     const targetUser = await req.payload.findByID({
       collection: 'users',
-      id: id as string,
+      id,
     })
     
     if (targetUser.role === 'super-admin') {

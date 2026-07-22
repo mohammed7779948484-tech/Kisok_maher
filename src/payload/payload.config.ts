@@ -36,11 +36,18 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     components: {
+      beforeNavLinks: [
+        '@/payload/admin/navigation/AdminNavLinks#AdminNavLinks',
+      ],
       graphics: {
         Icon: '@/payload/admin/graphics/Icon#Icon',
         Logo: '@/payload/admin/graphics/Logo#Logo',
       },
       views: {
+        catalog: {
+          Component: '@/payload/admin/views/Catalog#Catalog',
+          path: '/catalog',
+        },
         dashboard: {
           Component: '@/payload/admin/views/Dashboard#Dashboard',
         },
@@ -135,7 +142,7 @@ export default buildConfig({
             password,
             name: 'Admin',
             role: 'super-admin',
-          } as Record<string, unknown>,
+          },
         })
 
         payload.logger.info(`✅ First admin user created: ${email}`)

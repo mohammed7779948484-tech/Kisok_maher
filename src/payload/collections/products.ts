@@ -15,11 +15,41 @@ import { revalidateCache } from '../hooks/after-change/revalidate-cache'
 
 export const Products: CollectionConfig = {
     slug: 'products',
+    enableQueryPresets: true,
     admin: {
         useAsTitle: 'name',
         defaultColumns: ['name', 'slug', 'brand', 'is_active', 'createdAt'],
-        group: 'Catalog',
-        description: 'Products with brand and category relationships',
+        group: 'Store',
+        description: 'Manage product information, classification, media, and the linked flavor inventory.',
+        listSearchableFields: ['name', 'slug'],
+        pagination: {
+            defaultLimit: 15,
+            limits: [15, 30, 60],
+        },
+        components: {
+            views: {
+                list: {
+                    Component: '@/payload/admin/views/ProductsList#ProductsList',
+                },
+                edit: {
+                    default: {
+                        tab: {
+                            label: 'General Info',
+                            order: 0,
+                        },
+                    },
+                    variants: {
+                        Component: '@/payload/admin/views/ProductVariants#ProductVariants',
+                        path: '/variants',
+                        tab: {
+                            href: '/variants',
+                            label: 'Flavors & Inventory',
+                            order: 100,
+                        },
+                    },
+                },
+            },
+        },
     },
     access: {
         read: () => true, // Public read for storefront
@@ -29,15 +59,74 @@ export const Products: CollectionConfig = {
     },
     fields: [
         {
-            name: 'name',
-            type: 'text',
-            required: true,
+            type: 'collapsible',
+            label: 'Product details',
             admin: {
-                description: 'Product name',
+                initCollapsed: false,
             },
+            fields: [
+                {
+                    type: 'row',
+                    fields: [
+                        {
+                            name: 'name',
+                            type: 'text',
+                            required: true,
+                            admin: {
+                                description: 'Customer-facing product name',
+                                width: '60%',
+                            },
+                        },
+                        {
+                            name: 'unit_label',
+                            label: 'Unit label',
+                            type: 'text',
+                            required: true,
+                            defaultValue: 'Unit',
+                            admin: {
+                                description: 'Piece, pack, bottle, etc.',
+                                width: '40%',
+                            },
+                        },
+                    ],
+                },
+                {
+                    type: 'row',
+                    fields: [
+                        {
+                            name: 'brand',
+                            type: 'relationship',
+                            relationTo: 'brands',
+                            index: true,
+                            admin: {
+                                description: 'Product brand/manufacturer',
+                                width: '40%',
+                            },
+                        },
+                        {
+                            name: 'categories',
+                            type: 'relationship',
+                            relationTo: 'categories',
+                            hasMany: true,
+                            admin: {
+                                description: 'One or more storefront categories',
+                                width: '60%',
+                            },
+                        },
+                    ],
+                },
+                {
+                    name: 'description',
+                    type: 'richText',
+                    admin: {
+                        description: 'Product description shown in the catalog',
+                    },
+                },
+            ],
         },
         {
             name: 'slug',
+            label: 'Slug',
             type: 'text',
             required: true,
             unique: true,
@@ -48,49 +137,25 @@ export const Products: CollectionConfig = {
             },
         },
         {
-            name: 'brand',
-            type: 'relationship',
-            relationTo: 'brands',
-            index: true,
+            type: 'collapsible',
+            label: 'Product media',
             admin: {
-                description: 'Product brand/manufacturer',
+                initCollapsed: false,
             },
-        },
-        {
-            name: 'categories',
-            type: 'relationship',
-            relationTo: 'categories',
-            hasMany: true,
-            admin: {
-                description: 'Product categories (Many-to-Many)',
-            },
-        },
-        {
-            name: 'description',
-            type: 'richText',
-            admin: {
-                description: 'Product description (rich text)',
-            },
-        },
-        {
-            name: 'unit_label',
-            type: 'text',
-            required: true,
-            defaultValue: 'Unit',
-            admin: {
-                description: 'Unit label (e.g., "Piece", "Pack", "Bottle")',
-            },
-        },
-        {
-            name: 'image',
-            type: 'upload',
-            relationTo: 'media',
-            admin: {
-                description: 'Main product image',
-            },
+            fields: [
+                {
+                    name: 'image',
+                    type: 'upload',
+                    relationTo: 'media',
+                    admin: {
+                        description: 'Main image used when a flavor has no dedicated image',
+                    },
+                },
+            ],
         },
         {
             name: 'sort_order',
+            label: 'Sort order',
             type: 'number',
             required: true,
             defaultValue: 0,
@@ -101,6 +166,7 @@ export const Products: CollectionConfig = {
         },
         {
             name: 'is_active',
+            label: 'Active in storefront',
             type: 'checkbox',
             required: true,
             defaultValue: true,

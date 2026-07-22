@@ -7,6 +7,8 @@
  * @see Constitution: Tailwind CSS only, semantic HTML, a11y
  */
 
+'use client'
+
 import Link from 'next/link'
 import { useCart } from '../../logic/cart.store'
 
