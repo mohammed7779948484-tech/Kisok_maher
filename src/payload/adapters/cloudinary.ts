@@ -1,6 +1,6 @@
 import type { Adapter } from '@payloadcms/plugin-cloud-storage/types'
 import { v2 as cloudinary, type UploadApiOptions, type UploadApiResponse } from 'cloudinary'
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { env } from '@/core/config/env'
 
@@ -51,52 +51,49 @@ export const cloudinaryAdapter = (): Adapter => {
           console.error('Cloudinary deletion failed. Continuing Payload operation gracefully.', error)
         }
       },
-      handleUpload: ({ data, file }) => {
-        return new Promise<Record<string, unknown>>((resolve, reject) => {
-          const parts = file.filename.split('.')
-          const filenameWithoutExtension = parts.length > 1
-            ? parts.slice(0, -1).join('.')
-            : file.filename
+      handleUpload: async ({ data, file }) => {
+        if (!file.tempFilePath && !file.buffer) {
+          throw new Error('No buffer or tempFilePath found in file upload')
+        }
 
-          const options: UploadApiOptions = {
-            folder,
-            overwrite: true,
-            public_id: filenameWithoutExtension,
-            resource_type: 'auto',
-          }
+        const parts = file.filename.split('.')
+        const filenameWithoutExtension = parts.length > 1
+          ? parts.slice(0, -1).join('.')
+          : file.filename
 
-          const uploadCallback = (error: unknown, result?: UploadApiResponse): void => {
-            if (error || !result) {
+        const options: UploadApiOptions = {
+          folder,
+          overwrite: true,
+          public_id: filenameWithoutExtension,
+          resource_type: 'auto',
+        }
+
+        const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+          const uploadCallback = (error: unknown, response?: UploadApiResponse): void => {
+            if (error || !response) {
               reject(error instanceof Error ? error : new Error('Cloudinary upload failed without a result'))
               return
             }
-
-            const uploadData = data as Record<string, unknown>
-            uploadData.cloudinary_public_id = result.public_id
-            uploadData.cloudinary_secure_url = result.secure_url
-            uploadData.url = result.secure_url
-
-            if (typeof result.width === 'number') uploadData.width = result.width
-            if (typeof result.height === 'number') uploadData.height = result.height
-
-            resolve(uploadData)
+            resolve(response)
           }
 
           const stream = cloudinary.uploader.upload_stream(options, uploadCallback)
 
           if (file.tempFilePath) {
             fs.createReadStream(file.tempFilePath).pipe(stream)
-            return
-          }
-
-          if (file.buffer) {
+          } else {
             stream.end(file.buffer)
-            return
           }
-
-          stream.destroy(new Error('No buffer or tempFilePath found in file upload'))
-          reject(new Error('No buffer or tempFilePath found in file upload'))
         })
+
+        data.cloudinary_public_id = result.public_id
+        data.cloudinary_secure_url = result.secure_url
+        data.url = result.secure_url
+
+        if (typeof result.width === 'number') data.width = result.width
+        if (typeof result.height === 'number') data.height = result.height
+
+        return data
       },
       staticHandler: () => new Response(null, { status: 404, statusText: 'Not Found' }),
     }
