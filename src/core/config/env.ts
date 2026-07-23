@@ -1,6 +1,6 @@
 /**
  * Environment Configuration - Validated with Zod
- * 
+ *
  * Features:
  * - Strict validation of all environment variables at startup
  * - Type-safe access throughout the application
@@ -10,11 +10,7 @@
 
 import { z } from 'zod'
 
-/**
- * Environment variable schema
- * All environment variables MUST be defined here
- */
-/** Transform empty strings to undefined so optional() works correctly */
+/** Transform empty strings to undefined so optional() works correctly. */
 const emptyToUndefined = z.string().transform((val) => val === '' ? undefined : val)
 
 const envSchema = z.object({
@@ -43,8 +39,9 @@ const envSchema = z.object({
     .string()
     .min(6, 'GATE_PASSWORD must be at least 6 characters'),
 
-  // Cloudinary (Serverless optimization explicitly requires Cloudinary)
+  // Cloudinary
   CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Cloudinary Cloud Name is required'),
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Public Cloudinary Cloud Name is required'),
   CLOUDINARY_API_KEY: z.string().min(1, 'Cloudinary API Key is required'),
   CLOUDINARY_API_SECRET: z.string().min(1, 'Cloudinary API Secret is required'),
 
@@ -72,11 +69,19 @@ const envSchema = z.object({
   SEED_ADMIN_EMAIL: z.string().email().optional(),
   SEED_ADMIN_PASSWORD: z.string().optional(),
   WHATSAPP_NUMBER: z.string().optional(),
+}).superRefine((values, context) => {
+  if (values.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== values.CLOUDINARY_CLOUD_NAME) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Public and server Cloudinary cloud names must match',
+      path: ['NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME'],
+    })
+  }
 })
 
 /**
- * Parse and validate environment variables
- * Throws error if any required variables are missing or invalid
+ * Parse and validate environment variables.
+ * Throws an error if any required variables are missing or invalid.
  */
 function parseEnv() {
   try {
@@ -84,23 +89,23 @@ function parseEnv() {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missing = error.errors
-        .filter((e) => e.message.includes('Required'))
-        .map((e) => e.path.join('.'))
+        .filter((entry) => entry.message.includes('Required'))
+        .map((entry) => entry.path.join('.'))
 
       const invalid = error.errors
-        .filter((e) => !e.message.includes('Required'))
-        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .filter((entry) => !entry.message.includes('Required'))
+        .map((entry) => `${entry.path.join('.')}: ${entry.message}`)
 
       console.error('\n❌ Environment Validation Failed\n')
 
       if (missing.length > 0) {
         console.error('Missing required variables:')
-        missing.forEach((v) => console.error(`  - ${v}`))
+        missing.forEach((variable) => console.error(`  - ${variable}`))
       }
 
       if (invalid.length > 0) {
         console.error('\nInvalid variables:')
-        invalid.forEach((v) => console.error(`  - ${v}`))
+        invalid.forEach((variable) => console.error(`  - ${variable}`))
       }
 
       console.error('\nPlease check your .env.local file\n')
@@ -109,29 +114,17 @@ function parseEnv() {
   }
 }
 
-/**
- * Validated environment variables
- * Use this throughout the application instead of process.env
- */
+/** Validated environment variables. */
 export const env = parseEnv()
 
-/**
- * Type for environment variables
- * Use this for typing functions that accept env vars
- */
+/** Type for environment variables. */
 export type Env = z.infer<typeof envSchema>
 
-/**
- * Check if running in production
- */
+/** Check if running in production. */
 export const isProduction = env.NODE_ENV === 'production'
 
-/**
- * Check if running in development
- */
+/** Check if running in development. */
 export const isDevelopment = env.NODE_ENV === 'development'
 
-/**
- * Check if running in test environment
- */
+/** Check if running in test environment. */
 export const isTest = env.NODE_ENV === 'test'
