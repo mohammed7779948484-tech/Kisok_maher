@@ -39,8 +39,9 @@ export const cloudinaryAdapter = (): Adapter => {
       },
       handleDelete: async ({ doc, filename }) => {
         try {
-          const record = doc as Record<string, unknown>
-          const storedPublicID = record.cloudinary_public_id
+          const storedPublicID = 'cloudinary_public_id' in doc
+            ? doc.cloudinary_public_id
+            : undefined
           const filenameWithoutExtension = filename.split('.').slice(0, -1).join('.')
           const publicID = typeof storedPublicID === 'string' && storedPublicID
             ? storedPublicID
