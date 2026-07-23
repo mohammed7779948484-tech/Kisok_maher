@@ -24,6 +24,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { ProductVariants as ProductVariants_3951c809774f889aa7c0eda8f9304b69 } from '@/payload/admin/views/ProductVariants'
 import { ProductsList as ProductsList_977aa41df2db2d4c9616efc3a5055703 } from '@/payload/admin/views/ProductsList'
 import { OrdersList as OrdersList_397ddd987263c13ef88cf7ed3d63ff04 } from '@/payload/admin/views/OrdersList'
+import { OrderItems as OrderItems_02b080052f73c320443f272f080745a1 } from '@/payload/admin/views/OrderItems'
 import { QueryPresetsAccessCell as QueryPresetsAccessCell_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { QueryPresetsWhereCell as QueryPresetsWhereCell_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { QueryPresetsWhereField as QueryPresetsWhereField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
@@ -66,6 +67,7 @@ export const importMap = {
   "@/payload/admin/views/ProductVariants#ProductVariants": ProductVariants_3951c809774f889aa7c0eda8f9304b69,
   "@/payload/admin/views/ProductsList#ProductsList": ProductsList_977aa41df2db2d4c9616efc3a5055703,
   "@/payload/admin/views/OrdersList#OrdersList": OrdersList_397ddd987263c13ef88cf7ed3d63ff04,
+  "@/payload/admin/views/OrderItems#OrderItems": OrderItems_02b080052f73c320443f272f080745a1,
   "@payloadcms/next/client#QueryPresetsAccessCell": QueryPresetsAccessCell_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/next/client#QueryPresetsWhereCell": QueryPresetsWhereCell_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/next/client#QueryPresetsWhereField": QueryPresetsWhereField_2b8867833a34864a02ddf429b0728a40,
