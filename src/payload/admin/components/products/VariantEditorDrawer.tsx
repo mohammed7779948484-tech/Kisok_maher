@@ -95,34 +95,42 @@ export function VariantEditorDrawer({
     setError(null)
     setIsSaving(true)
     const body: Record<string, unknown> = {
-        images: form.imageID ? [{ image: form.imageID }] : [],
-        is_active: form.isActive,
-        option_value: form.optionValue.trim() || null,
-        product: productID,
-        sku: form.sku.trim(),
-        sort_order: sortOrder,
-        stock_quantity: stockQuantity,
-        variant_name: form.name.trim(),
+      images: selectedMedia ? [{ image: selectedMedia.id }] : [],
+      is_active: form.isActive,
+      option_value: form.optionValue.trim() || null,
+      product: productID,
+      sku: form.sku.trim(),
+      sort_order: sortOrder,
+      stock_quantity: stockQuantity,
+      variant_name: form.name.trim(),
     }
     if (canReadPrice) body.price = price
-    const response = await fetch(variant ? `/api/product_variants/${variant.id}` : '/api/product_variants', {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-      method: variant ? 'PATCH' : 'POST',
-    })
-    setIsSaving(false)
 
-    if (!response.ok) {
-      const result = await response.json().catch(() => null) as { errors?: Array<{ message?: string }> } | null
-      const message = result?.errors?.[0]?.message ?? 'Payload could not save this flavor. Check the SKU and required fields, then try again.'
+    try {
+      const response = await fetch(variant ? `/api/product_variants/${variant.id}` : '/api/product_variants', {
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+        method: variant ? 'PATCH' : 'POST',
+      })
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { errors?: Array<{ message?: string }> } | null
+        const message = result?.errors?.[0]?.message ?? 'Payload could not save this flavor. Check the SKU and required fields, then try again.'
+        setError(message)
+        toast.error('Flavor was not saved', { description: message })
+        return
+      }
+
+      toast.success(variant ? 'Flavor updated' : 'Flavor created', { description: form.name.trim() })
+      onClose()
+      onSaved()
+    } catch {
+      const message = 'The flavor could not be saved because the server could not be reached. Try again.'
       setError(message)
       toast.error('Flavor was not saved', { description: message })
-      return
+    } finally {
+      setIsSaving(false)
     }
-
-    toast.success(variant ? 'Flavor updated' : 'Flavor created', { description: form.name.trim() })
-    onClose()
-    onSaved()
   }
 
   return (
