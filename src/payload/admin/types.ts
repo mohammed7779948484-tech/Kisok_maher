@@ -158,3 +158,19 @@ export interface OrdersListDTO {
   totalDocs: number
   totalPages: number
 }
+
+export interface OrderItemDetailDTO {
+  id: AdminEntityID
+  productName: string
+  quantity: number
+  variantName: string
+}
+
+export interface OrderItemsViewDTO {
+  createdAt: string
+  items: OrderItemDetailDTO[]
+  orderID: AdminEntityID
+  orderNumber: string
+  status: string
+  totalQuantity: number
+}
