@@ -82,43 +82,66 @@ export function CatalogClient({ data }: CatalogClientProps): React.ReactElement 
   async function saveItem(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     if (isSaving) return
-    setError(null)
-    setIsSaving(true)
+
+    const selectedMedia = data.media.find((item) => String(item.id) === form.imageID) ?? null
+    const selectedParent = topLevelCategories.find((item) => String(item.id) === form.parentID) ?? null
     const collection = tab
     const body = tab === 'brands'
-      ? { description: form.description || null, is_active: form.isActive, logo: form.imageID || null, name: form.name, sort_order: Number(form.sortOrder) }
-      : { image: form.imageID || null, is_active: form.isActive, name: form.name, parent: form.parentID || null, sort_order: Number(form.sortOrder) }
-    const response = await fetch(editing ? `/api/${collection}/${editing.id}` : `/api/${collection}`, {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-      method: editing ? 'PATCH' : 'POST',
-    })
-    setIsSaving(false)
-    if (!response.ok) {
-      const message = 'Payload could not save this entry. Review the fields and your permissions, then try again.'
+      ? { description: form.description || null, is_active: form.isActive, logo: selectedMedia?.id ?? null, name: form.name, sort_order: Number(form.sortOrder) }
+      : { image: selectedMedia?.id ?? null, is_active: form.isActive, name: form.name, parent: selectedParent?.id ?? null, sort_order: Number(form.sortOrder) }
+
+    setError(null)
+    setIsSaving(true)
+
+    try {
+      const response = await fetch(editing ? `/api/${collection}/${editing.id}` : `/api/${collection}`, {
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+        method: editing ? 'PATCH' : 'POST',
+      })
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { errors?: Array<{ message?: string }> } | null
+        const message = result?.errors?.[0]?.message ?? 'Payload could not save this entry. Review the fields and your permissions, then try again.'
+        setError(message)
+        toast.error('Catalog entry was not saved', { description: message })
+        return
+      }
+
+      toast.success(editing ? 'Catalog entry updated' : 'Catalog entry created', { description: form.name })
+      closeDrawer()
+      startTransition(() => router.refresh())
+    } catch {
+      const message = 'The catalog entry could not be saved because the server could not be reached. Try again.'
       setError(message)
       toast.error('Catalog entry was not saved', { description: message })
-      return
+    } finally {
+      setIsSaving(false)
     }
-    toast.success(editing ? 'Catalog entry updated' : 'Catalog entry created', { description: form.name })
-    closeDrawer()
-    startTransition(() => router.refresh())
   }
 
   async function deleteItem(id: AdminEntityID, name: string): Promise<void> {
     if (!window.confirm(`Delete “${name}”? This cannot be undone.`)) return
     setError(null)
     setIsSaving(true)
-    const response = await fetch(`/api/${tab}/${id}`, { method: 'DELETE' })
-    setIsSaving(false)
-    if (!response.ok) {
-      const message = 'This entry could not be deleted. It may still be in use or your role may not allow deletion.'
+
+    try {
+      const response = await fetch(`/api/${tab}/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const message = 'This entry could not be deleted. It may still be in use or your role may not allow deletion.'
+        setError(message)
+        toast.error('Catalog entry was not deleted', { description: message })
+        return
+      }
+      toast.success('Catalog entry deleted', { description: name })
+      startTransition(() => router.refresh())
+    } catch {
+      const message = 'The catalog entry could not be deleted because the server could not be reached. Try again.'
       setError(message)
       toast.error('Catalog entry was not deleted', { description: message })
-      return
+    } finally {
+      setIsSaving(false)
     }
-    toast.success('Catalog entry deleted', { description: name })
-    startTransition(() => router.refresh())
   }
 
   const items: EditableItem[] = tab === 'brands' ? brands : categories
