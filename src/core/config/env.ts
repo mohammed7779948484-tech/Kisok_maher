@@ -41,7 +41,7 @@ const envSchema = z.object({
 
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Cloudinary Cloud Name is required'),
-  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1, 'Public Cloudinary Cloud Name is required'),
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: emptyToUndefined.pipe(z.string().min(1).optional()).optional(),
   CLOUDINARY_API_KEY: z.string().min(1, 'Cloudinary API Key is required'),
   CLOUDINARY_API_SECRET: z.string().min(1, 'Cloudinary API Secret is required'),
 
@@ -70,7 +70,10 @@ const envSchema = z.object({
   SEED_ADMIN_PASSWORD: z.string().optional(),
   WHATSAPP_NUMBER: z.string().optional(),
 }).superRefine((values, context) => {
-  if (values.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== values.CLOUDINARY_CLOUD_NAME) {
+  if (
+    values.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+    values.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME !== values.CLOUDINARY_CLOUD_NAME
+  ) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       message: 'Public and server Cloudinary cloud names must match',
