@@ -167,6 +167,23 @@ export const Orders: CollectionConfig = {
             },
         },
         {
+            name: 'items',
+            type: 'join',
+            collection: 'order_items',
+            on: 'order',
+            label: 'Order items',
+            defaultLimit: 50,
+            defaultSort: 'id',
+            maxDepth: 0,
+            access: {
+                read: ({ req: { user } }) => Boolean(user),
+            },
+            admin: {
+                allowCreate: false,
+                defaultColumns: ['product_name', 'variant_name', 'quantity'],
+            },
+        },
+        {
             name: 'honeypot_field',
             type: 'text',
             admin: {
