@@ -28,6 +28,23 @@ export const Orders: CollectionConfig = {
                 list: {
                     Component: '@/payload/admin/views/OrdersList#OrdersList',
                 },
+                edit: {
+                    default: {
+                        tab: {
+                            label: 'Order details',
+                            order: 0,
+                        },
+                    },
+                    items: {
+                        Component: '@/payload/admin/views/OrderItems#OrderItems',
+                        path: '/items',
+                        tab: {
+                            href: '/items',
+                            label: 'Items',
+                            order: 100,
+                        },
+                    },
+                },
             },
         },
     },
