@@ -4,30 +4,27 @@
  */
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
-import { env } from '@/core/config/env'
 
-// Collections
-import { Users } from './collections/users'
-import { Brands } from './collections/brands'
-import { Categories } from './collections/categories'
-import { Products } from './collections/products'
-import { ProductVariants } from './collections/product-variants'
-import { Media } from './collections/media'
+import { env } from '@/core/config/env'
 import { Carts, CartItems } from '@/features/cart/db/schema'
 import { Orders, OrderItems } from '@/features/checkout/db/schema'
 
-// Globals
+import { cloudinaryAdapter } from './adapters/cloudinary'
+import { Brands } from './collections/brands'
+import { Categories } from './collections/categories'
+import { Media } from './collections/media'
+import { ProductVariants } from './collections/product-variants'
+import { Products } from './collections/products'
+import { Users } from './collections/users'
 import { SiteSettings } from './globals/site-settings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-
-import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
-import { cloudinaryAdapter } from './adapters/cloudinary'
 
 export default buildConfig({
   admin: {
@@ -75,6 +72,7 @@ export default buildConfig({
         media: {
           adapter: cloudinaryAdapter(),
           disableLocalStorage: true,
+          disablePayloadAccessControl: true,
         },
       },
     }),
