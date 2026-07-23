@@ -33,7 +33,7 @@ export function readMedia(value: unknown): AdminMediaDTO | null {
   const id = readID(record)
   if (!record || id === null) return null
 
-  const url = readString(record.url) || readString(record.cloudinary_secure_url)
+  const url = readString(record.cloudinary_secure_url) || readString(record.url)
 
   return {
     alt: readString(record.alt) || null,
