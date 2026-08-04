@@ -6,7 +6,7 @@ import { toast } from '@payloadcms/ui'
 
 import type { AdminEntityID, AdminMediaDTO, ProductVariantDTO } from '../../types'
 import { AdminImage } from '../shared/AdminImage'
-import { MediaPickerDialog } from './MediaPickerDialog'
+import { AdminMediaPickerDialog } from '../shared/AdminMediaPickerDialog'
 
 interface VariantEditorPanelProps {
   canReadPrice: boolean
@@ -196,12 +196,14 @@ export function VariantEditorPanel({
         <div className="dragon-inline-editor__actions"><button className="dragon-button" disabled={isSaving} onClick={onClose} type="button">Cancel</button><button className="dragon-button dragon-button--primary" disabled={isSaving} type="submit"><Save aria-hidden="true" size={16} />{isSaving ? 'Saving…' : variant ? 'Save flavor' : 'Create flavor'}</button></div>
       </form>
 
-      <MediaPickerDialog
+      <AdminMediaPickerDialog
+        description="Select one image from Payload Media. The product image remains the fallback when none is selected."
         media={media}
         onOpenChange={setMediaPickerOpen}
         onSelect={(mediaID) => setForm((current) => ({ ...current, imageID: mediaID }))}
         open={mediaPickerOpen}
         selectedMediaID={form.imageID}
+        title="Choose flavor image"
       />
     </section>
   )

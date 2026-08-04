@@ -329,7 +329,7 @@
   }
 
   .dragon-media-dialog {
-    @apply fixed left-1/2 top-1/2 z-[111] flex max-h-[88vh] w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border shadow-2xl focus:outline-none;
+    @apply fixed inset-x-0 top-[5vh] z-[111] mx-auto flex max-h-[90vh] w-[calc(100%-2rem)] max-w-6xl flex-col overflow-hidden overscroll-contain rounded-2xl border shadow-2xl focus:outline-none;
     background: var(--theme-elevation-0);
     border-color: var(--theme-elevation-200);
     color: var(--theme-text);

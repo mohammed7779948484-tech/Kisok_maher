@@ -8,6 +8,7 @@ import { toast } from '@payloadcms/ui'
 import type { AdminEntityID, CatalogBrandDTO, CatalogCategoryDTO, CatalogDTO } from '../../types'
 import { AdminDrawer } from '../shared/AdminDrawer'
 import { AdminImage } from '../shared/AdminImage'
+import { AdminMediaPickerDialog } from '../shared/AdminMediaPickerDialog'
 import { StatusBadge } from '../shared/StatusBadge'
 
 type CatalogTab = 'brands' | 'categories'
@@ -40,6 +41,7 @@ export function CatalogClient({ data }: CatalogClientProps): React.ReactElement 
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState<EditableItem | null>(null)
   const [form, setForm] = useState<CatalogFormState>(EMPTY_FORM)
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -50,8 +52,10 @@ export function CatalogClient({ data }: CatalogClientProps): React.ReactElement 
   const categories = useMemo(() => data.categories.filter((item) => item.name.toLowerCase().includes(normalizedSearch) || item.parent?.name.toLowerCase().includes(normalizedSearch)), [data.categories, normalizedSearch])
   const topLevelCategories = data.categories.filter((item) => !item.parent && item.id !== editing?.id)
   const permissions = data.permissions[tab]
+  const selectedMedia = data.media.find((item) => String(item.id) === form.imageID) ?? null
 
   function closeDrawer(): void {
+    setMediaPickerOpen(false)
     setOpen(false)
     setEditing(null)
     setForm(EMPTY_FORM)
@@ -170,11 +174,33 @@ export function CatalogClient({ data }: CatalogClientProps): React.ReactElement 
           {tab === 'brands' ? <label><span className="dragon-label">Description</span><textarea className="dragon-control min-h-24" onChange={(event) => setForm({ ...form, description: event.target.value })} value={form.description} /></label> : <label><span className="dragon-label">Parent category</span><select className="dragon-control" onChange={(event) => setForm({ ...form, parentID: event.target.value })} value={form.parentID}><option value="">Top level</option>{topLevelCategories.map((category) => <option key={String(category.id)} value={String(category.id)}>{category.name}</option>)}</select></label>}
           <label><span className="dragon-label">Sort order</span><input className="dragon-control" min="0" onChange={(event) => setForm({ ...form, sortOrder: event.target.value })} required type="number" value={form.sortOrder} /></label>
           <label className="flex items-center gap-3"><input checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} type="checkbox" /><span className="font-medium">Active in storefront</span></label>
-          <fieldset className="grid gap-3"><legend className="dragon-label">Image</legend><select className="dragon-control" onChange={(event) => setForm({ ...form, imageID: event.target.value })} value={form.imageID}><option value="">No image</option>{data.media.map((media) => <option key={String(media.id)} value={String(media.id)}>{media.alt || media.filename || `Media ${media.id}`}</option>)}</select>{form.imageID ? <div className="flex items-center gap-3 rounded-lg border p-3"><ImageIcon aria-hidden="true" size={18} /><span className="dragon-muted text-sm">Selected existing Payload media item</span></div> : null}</fieldset>
+          <fieldset className="grid gap-3">
+            <legend className="dragon-label">{tab === 'brands' ? 'Brand logo' : 'Category image'}</legend>
+            <div className="dragon-media-selection">
+              <AdminImage className="h-20 w-20" fallback={form.name || (tab === 'brands' ? 'BR' : 'CA')} media={selectedMedia} size={80} />
+              <div className="min-w-0 flex-1">
+                <p className="m-0 truncate text-sm font-semibold">{selectedMedia?.alt || selectedMedia?.filename || 'No image selected'}</p>
+                <p className="dragon-muted mb-0 mt-1 text-xs">Choose an existing image from Payload Media.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="dragon-button dragon-button--primary" disabled={!data.media.length} onClick={() => setMediaPickerOpen(true)} type="button"><ImageIcon aria-hidden="true" size={16} />Choose media</button>
+                  {form.imageID ? <button className="dragon-button" onClick={() => setForm((current) => ({ ...current, imageID: '' }))} type="button">Remove image</button> : null}
+                </div>
+              </div>
+            </div>
+          </fieldset>
           {error ? <p className="m-0 rounded-lg border p-3 text-sm dragon-badge--danger" role="alert">{error}</p> : null}
           <div className="mt-2 flex justify-end gap-3"><button className="dragon-button" disabled={isSaving} onClick={closeDrawer} type="button">Cancel</button><button className="dragon-button dragon-button--primary" disabled={isSaving} type="submit">{isSaving ? 'Saving…' : editing ? 'Save changes' : `Create ${tab === 'brands' ? 'brand' : 'category'}`}</button></div>
         </form>
       </AdminDrawer>
+      <AdminMediaPickerDialog
+        description={`Select one image from Payload Media for this ${tab === 'brands' ? 'brand' : 'category'}.`}
+        media={data.media}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(mediaID) => setForm((current) => ({ ...current, imageID: mediaID }))}
+        open={mediaPickerOpen}
+        selectedMediaID={form.imageID}
+        title={`Choose ${tab === 'brands' ? 'brand logo' : 'category image'}`}
+      />
     </div>
   )
 }

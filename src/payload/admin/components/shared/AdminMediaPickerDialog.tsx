@@ -5,27 +5,31 @@ import { Check, ImageIcon, Search, X } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 
 import type { AdminMediaDTO } from '../../types'
-import { AdminImage } from '../shared/AdminImage'
+import { AdminImage } from './AdminImage'
 
-interface MediaPickerDialogProps {
+interface AdminMediaPickerDialogProps {
+  description?: string
   media: AdminMediaDTO[]
   onOpenChange: (open: boolean) => void
   onSelect: (mediaID: string) => void
   open: boolean
   selectedMediaID: string
+  title?: string
 }
 
 function getMediaLabel(item: AdminMediaDTO): string {
   return item.alt || item.filename || `Media ${item.id}`
 }
 
-export function MediaPickerDialog({
+export function AdminMediaPickerDialog({
+  description = 'Select one image from Payload Media.',
   media,
   onOpenChange,
   onSelect,
   open,
   selectedMediaID,
-}: MediaPickerDialogProps): React.ReactElement {
+  title = 'Choose image',
+}: AdminMediaPickerDialogProps): React.ReactElement {
   const [search, setSearch] = useState('')
   const filteredMedia = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -51,9 +55,9 @@ export function MediaPickerDialog({
         <Dialog.Content className="dragon-media-dialog">
           <header className="dragon-media-dialog__header">
             <div>
-              <Dialog.Title className="m-0 text-xl font-semibold">Choose flavor image</Dialog.Title>
+              <Dialog.Title className="m-0 text-xl font-semibold">{title}</Dialog.Title>
               <Dialog.Description className="dragon-page-description mt-1">
-                Select one image from Payload Media. The product image remains the fallback when none is selected.
+                {description}
               </Dialog.Description>
             </div>
             <Dialog.Close aria-label="Close media library" className="dragon-icon-button">
@@ -79,7 +83,7 @@ export function MediaPickerDialog({
 
           <div className="dragon-media-dialog__body">
             {filteredMedia.length ? (
-              <div aria-label="Select flavor image" className="dragon-media-grid" role="radiogroup">
+              <div aria-label="Select media image" className="dragon-media-grid" role="radiogroup">
                 {filteredMedia.map((item) => {
                   const mediaID = String(item.id)
                   const selected = mediaID === selectedMediaID
