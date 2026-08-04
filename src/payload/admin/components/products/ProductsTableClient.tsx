@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, PackageOpen, Plus, Search } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
-import React, { useMemo, useState, useTransition } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { toast } from '@payloadcms/ui'
 
 import type { ProductListItemDTO, ProductsListDTO, ProductVariantDTO } from '../../types'
@@ -11,7 +11,7 @@ import { ProductsTableSkeleton } from '../shared/AdminSkeleton'
 import { StatusBadge } from '../shared/StatusBadge'
 import { FlavorActionMenu, ProductActionMenu } from './ProductActionMenu'
 import { ProductPreviewDialog } from './ProductPreviewDialog'
-import { VariantEditorDrawer } from './VariantEditorDrawer'
+import { VariantEditorPanel } from './VariantEditorPanel'
 
 interface ProductsTableClientProps {
   data: ProductsListDTO
@@ -35,10 +35,16 @@ export function ProductsTableClient({ data }: ProductsTableClientProps): React.R
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [flavorEditor, setFlavorEditor] = useState<FlavorEditorState | null>(null)
   const [previewProduct, setPreviewProduct] = useState<ProductListItemDTO | null>(null)
+  const flavorEditorRef = useRef<HTMLDivElement>(null)
   const [isMutating, setIsMutating] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isNavigating, setIsNavigating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!flavorEditor) return
+    flavorEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [flavorEditor])
   const initialFilters = useMemo(() => data.filters, [data.filters])
   const activeFilterCount = [data.filters.brand, data.filters.category, data.filters.search, data.filters.status, data.filters.stock].filter(Boolean).length
 
@@ -153,6 +159,9 @@ export function ProductsTableClient({ data }: ProductsTableClientProps): React.R
 
       {selected.size ? <div className="dragon-selection-bar"><p className="m-0 flex-1 text-sm font-medium">{selected.size} products selected</p><button className="dragon-button" disabled={isMutating} onClick={() => void bulkSetActive(true)} type="button">Set active</button><button className="dragon-button" disabled={isMutating} onClick={() => void bulkSetActive(false)} type="button">Set inactive</button></div> : null}
       {error ? <p className="m-0 rounded-lg border p-3 text-sm dragon-badge--danger" role="alert">{error}</p> : null}
+      <div ref={flavorEditorRef}>
+        <VariantEditorPanel canReadPrice={data.canReadVariantPrice} media={data.media} onClose={() => setFlavorEditor(null)} onSaved={refresh} open={flavorEditor !== null} productID={flavorEditor?.product.id ?? null} productName={flavorEditor?.product.name ?? ''} variant={flavorEditor?.variant ?? null} />
+      </div>
 
       {data.docs.length ? (
         <div className="dragon-table-wrap dragon-product-table">
@@ -181,7 +190,6 @@ export function ProductsTableClient({ data }: ProductsTableClientProps): React.R
 
       <footer className="dragon-pagination"><p className="dragon-muted m-0 text-sm">{data.totalDocs} products · Page {data.page} of {Math.max(data.totalPages, 1)}</p><div className="flex gap-2"><button className="dragon-button" disabled={!data.hasPrevPage} onClick={() => navigate({ page: String(data.page - 1) })} type="button"><ChevronLeft aria-hidden="true" size={16} />Previous</button><button className="dragon-button" disabled={!data.hasNextPage} onClick={() => navigate({ page: String(data.page + 1) })} type="button">Next<ChevronRight aria-hidden="true" size={16} /></button></div></footer>
 
-      <VariantEditorDrawer canReadPrice={data.canReadVariantPrice} media={data.media} onClose={() => setFlavorEditor(null)} onSaved={refresh} open={flavorEditor !== null} productID={flavorEditor?.product.id ?? null} productName={flavorEditor?.product.name ?? ''} variant={flavorEditor?.variant ?? null} />
       <ProductPreviewDialog onOpenChange={(open) => { if (!open) setPreviewProduct(null) }} open={previewProduct !== null} product={previewProduct} />
     </div>
   )

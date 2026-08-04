@@ -1,14 +1,14 @@
 'use client'
 
-import { Check, ImageIcon, Package, Save } from 'lucide-react'
+import { ImageIcon, Package, Save, X } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from '@payloadcms/ui'
 
 import type { AdminEntityID, AdminMediaDTO, ProductVariantDTO } from '../../types'
-import { AdminDrawer } from '../shared/AdminDrawer'
 import { AdminImage } from '../shared/AdminImage'
+import { MediaPickerDialog } from './MediaPickerDialog'
 
-interface VariantEditorDrawerProps {
+interface VariantEditorPanelProps {
   canReadPrice: boolean
   media: AdminMediaDTO[]
   onClose: () => void
@@ -55,7 +55,7 @@ function getFormState(variant: ProductVariantDTO | null): VariantFormState {
   }
 }
 
-export function VariantEditorDrawer({
+export function VariantEditorPanel({
   canReadPrice,
   media,
   onClose,
@@ -64,9 +64,10 @@ export function VariantEditorDrawer({
   productID,
   productName,
   variant,
-}: VariantEditorDrawerProps): React.ReactElement {
+}: VariantEditorPanelProps): React.ReactElement | null {
   const [form, setForm] = useState<VariantFormState>(() => getFormState(variant))
   const [error, setError] = useState<string | null>(null)
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const selectedMedia = useMemo(
     () => media.find((item) => String(item.id) === form.imageID) ?? null,
@@ -77,6 +78,7 @@ export function VariantEditorDrawer({
     if (!open) return
     setForm(getFormState(variant))
     setError(null)
+    setMediaPickerOpen(false)
   }, [open, variant])
 
   async function saveVariant(event: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -133,13 +135,21 @@ export function VariantEditorDrawer({
     }
   }
 
+  if (!open) return null
+
   return (
-    <AdminDrawer
-      description={`Manage inventory for ${productName || 'this product'} without leaving the products workspace.`}
-      onOpenChange={(nextOpen) => { if (!nextOpen && !isSaving) onClose() }}
-      open={open}
-      title={variant ? 'Edit flavor' : 'Add flavor'}
-    >
+    <section aria-labelledby="flavor-editor-title" className="dragon-inline-editor">
+      <header className="dragon-inline-editor__header">
+        <div>
+          <p className="dragon-muted m-0 text-xs font-semibold uppercase tracking-wide">{productName || 'Product flavor'}</p>
+          <h2 className="mb-0 mt-1 text-xl font-semibold" id="flavor-editor-title">{variant ? 'Edit flavor' : 'Add flavor'}</h2>
+          <p className="dragon-page-description mt-1">Manage flavor details, inventory, and media directly on this page.</p>
+        </div>
+        <button aria-label="Close flavor editor" className="dragon-icon-button" disabled={isSaving} onClick={onClose} type="button">
+          <X aria-hidden="true" size={18} />
+        </button>
+      </header>
+
       <form className="grid gap-6" onSubmit={(event) => void saveVariant(event)}>
         <section className="dragon-form-section">
           <div className="dragon-form-section__title"><Package aria-hidden="true" size={17} /><span>Flavor details</span></div>
@@ -164,26 +174,35 @@ export function VariantEditorDrawer({
 
         <section className="dragon-form-section">
           <div className="dragon-form-section__title"><ImageIcon aria-hidden="true" size={17} /><span>Flavor image</span></div>
-          <div className="flex items-center gap-3 rounded-xl border p-3">
-            <AdminImage className="h-14 w-14" fallback={form.name || productName || 'FL'} media={selectedMedia} size={56} />
-            <div className="min-w-0 flex-1"><p className="m-0 truncate text-sm font-medium">{selectedMedia?.alt || selectedMedia?.filename || 'Use the product image'}</p><p className="dragon-muted mb-0 mt-1 text-xs">Select an existing item from Payload Media.</p></div>
-            {form.imageID ? <button className="dragon-button min-h-8 px-3 py-1" onClick={() => setForm({ ...form, imageID: '' })} type="button">Clear</button> : null}
-          </div>
-          {media.length ? (
-            <div aria-label="Select flavor image" className="dragon-media-picker" role="radiogroup">
-              {media.map((item) => {
-                const selected = String(item.id) === form.imageID
-                return <button aria-checked={selected} aria-label={`Use ${item.alt || item.filename || `media ${item.id}`}`} className="dragon-media-picker__item" key={String(item.id)} onClick={() => setForm({ ...form, imageID: String(item.id) })} role="radio" type="button"><AdminImage className="h-16 w-16" fallback={item.alt || item.filename || 'IM'} media={item} size={64} />{selected ? <span className="dragon-media-picker__check"><Check aria-hidden="true" size={13} /></span> : null}</button>
-              })}
+          <div className="dragon-media-selection">
+            <AdminImage className="h-24 w-24" fallback={form.name || productName || 'FL'} media={selectedMedia} size={96} />
+            <div className="min-w-0 flex-1">
+              <p className="m-0 truncate text-sm font-semibold">{selectedMedia?.alt || selectedMedia?.filename || 'Using product image'}</p>
+              <p className="dragon-muted mb-0 mt-1 text-xs">{media.length ? 'Open the media library to choose a clear flavor image.' : 'No Payload Media images are available yet.'}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button className="dragon-button dragon-button--primary" disabled={!media.length} onClick={() => setMediaPickerOpen(true)} type="button">
+                  <ImageIcon aria-hidden="true" size={16} />
+                  Choose media
+                </button>
+                {form.imageID ? <button className="dragon-button" onClick={() => setForm((current) => ({ ...current, imageID: '' }))} type="button">Use product image</button> : null}
+              </div>
             </div>
-          ) : <p className="dragon-muted m-0 text-sm">No media has been uploaded yet. The product image will be used.</p>}
+          </div>
         </section>
 
         <label className="dragon-switch-row"><span><span className="block font-medium">Active in storefront</span><span className="dragon-muted mt-1 block text-xs">Inactive flavors remain in the admin but cannot be ordered.</span></span><input checked={form.isActive} onChange={(event) => setForm({ ...form, isActive: event.target.checked })} type="checkbox" /></label>
 
         {error ? <p className="m-0 rounded-lg border p-3 text-sm dragon-badge--danger" role="alert">{error}</p> : null}
-        <div className="dragon-drawer-actions"><button className="dragon-button" disabled={isSaving} onClick={onClose} type="button">Cancel</button><button className="dragon-button dragon-button--primary" disabled={isSaving} type="submit"><Save aria-hidden="true" size={16} />{isSaving ? 'Saving…' : variant ? 'Save flavor' : 'Create flavor'}</button></div>
+        <div className="dragon-inline-editor__actions"><button className="dragon-button" disabled={isSaving} onClick={onClose} type="button">Cancel</button><button className="dragon-button dragon-button--primary" disabled={isSaving} type="submit"><Save aria-hidden="true" size={16} />{isSaving ? 'Saving…' : variant ? 'Save flavor' : 'Create flavor'}</button></div>
       </form>
-    </AdminDrawer>
+
+      <MediaPickerDialog
+        media={media}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(mediaID) => setForm((current) => ({ ...current, imageID: mediaID }))}
+        open={mediaPickerOpen}
+        selectedMediaID={form.imageID}
+      />
+    </section>
   )
 }
